@@ -22,6 +22,7 @@ class _RegisterState extends State<Register> {
 
   String? selectedTraining;
   String? selectedBatch;
+String? selectedGender;
   bool isLoading = false;
   String? errorMessage;
 
@@ -58,7 +59,7 @@ class _RegisterState extends State<Register> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Form(
-            key: _formKey, // 🔥 sekarang semua field ikut divalidasi
+            key: _formKey, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -172,27 +173,68 @@ class _RegisterState extends State<Register> {
                 ),
                 const SizedBox(height: 10),
 
-                // Batch
-                _buildLabel("Batch"),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedBatch,
-                  decoration: _inputDecoration("Pilih Batch"),
-                  dropdownColor: Colors.white,
-                  items: const [
-                    DropdownMenuItem(value: "Batch 1", child: Text("Batch 1")),
-                    DropdownMenuItem(value: "Batch 2", child: Text("Batch 2")),
-                    DropdownMenuItem(value: "Batch 3", child: Text("Batch 3")),
-                    DropdownMenuItem(value: "Batch 4", child: Text("Batch 4")),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedBatch = value;
-                      batchController.text = value ?? "";
-                    });
-                  },
-                  validator: (value) => value == null ? "Pilih batch" : null,
-                ),
-                const SizedBox(height: 10),
+            // Batch & Kelamin (sejajar)
+// Batch & Kelamin (sejajar)
+Row(
+  children: [
+    // Batch
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel("Batch"),
+          DropdownButtonFormField<String>(
+            value: selectedBatch,
+            decoration: _inputDecoration("Pilih Batch"),
+            dropdownColor: Colors.white,
+            items: const [
+              DropdownMenuItem(value: "Batch 1", child: Text("Batch 1")),
+              DropdownMenuItem(value: "Batch 2", child: Text("Batch 2")),
+              DropdownMenuItem(value: "Batch 3", child: Text("Batch 3")),
+              DropdownMenuItem(value: "Batch 4", child: Text("Batch 4")),
+            ],
+            onChanged: (value) {
+              setState(() {
+                selectedBatch = value;
+                batchController.text = value ?? "";
+              });
+            },
+            validator: (value) => value == null ? "Pilih batch" : null,
+          ),
+        ],
+      ),
+    ),
+
+    const SizedBox(width: 12), // jarak antar kolom
+
+    // Kelamin
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel("Kelamin"),
+          DropdownButtonFormField<String>(
+            value: selectedGender,
+            decoration: _inputDecoration("Pilih Kelamin"),
+            dropdownColor: Colors.white,
+            items: const [
+              DropdownMenuItem(value: "Laki-laki", child: Text("Laki-laki")),
+              DropdownMenuItem(value: "Perempuan", child: Text("Perempuan")),
+            ],
+            onChanged: (value) {
+              setState(() {
+                selectedGender = value;
+              });
+            },
+            validator: (value) => value == null ? "Pilih kelamin" : null,
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 10),
+
 
                 // Password
                 _buildLabel("Password"),
