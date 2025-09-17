@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   final void Function(String) showSnackBar;
+  static const id = "/home";
 
   const HomePage({super.key, void Function(String)? showSnackBar})
     : showSnackBar = showSnackBar ?? _defaultSnackBar;

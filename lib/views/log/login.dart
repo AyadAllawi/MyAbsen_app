@@ -13,31 +13,31 @@ class _LoginAbsenState extends State<LoginAbsen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  bool isVisibility = false;
-  String? errorMessage;
-  bool isLoading = false;
 
   bool _isObscure = true;
+  bool isLoading = false;
 
   void loginUser() async {
     setState(() {
       isLoading = true;
-      errorMessage = null;
     });
+
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Email, Password, dan Nama tidak boleh kosong"),
-        ),
+        const SnackBar(content: Text("Email dan Password tidak boleh kosong")),
       );
       setState(() {
         isLoading = false;
       });
       return;
     }
-    // TODO: tambahin logika API login kalo udah siap
+
+    // TODO: tambahkan logika login (API)
+    await Future.delayed(const Duration(seconds: 2));
+
     setState(() {
       isLoading = false;
     });
@@ -46,255 +46,189 @@ class _LoginAbsenState extends State<LoginAbsen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF060F30),
-      body: Container(
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Transform.translate(
-                offset: const Offset(-10, 80),
-                child: Image.asset(
-                  "assets/images/image/logo.png",
-                  width: 230,
-                  height: 150,
-                ),
-              ),
-              
-            ),
-
-          
-            
-            
-            SafeArea(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Form(
+              key: _formKey,
               child: Column(
                 children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 200),
-                              const Text(
-                                "Masuk",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins-Bold',
-                                  fontSize: 24,
-                                  letterSpacing: -0.7,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFFFFFFF),
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 1),
-                                child: Text(
-                                  "Dan coba pengalaman baru di FutZone!",
-                                  style: TextStyle(color: Color(0xFFFFFFFF)),
-                                ),
-                              ),
-                              const SizedBox(height: 30),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Email Address",
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF888888),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  TextFormField(
-                                    controller: emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      hintStyle: const TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        color: Colors.white70,
-                                      ),
-                                      hintText: "Enter your email",
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                        borderSide: const BorderSide(
-                                          color: Colors.white38,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                        borderSide: const BorderSide(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Password",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: 'Poppins',
-                                      color: Color(0xFF888888),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  TextFormField(
-                                    controller: passwordController,
-                                    obscureText: _isObscure,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      hintStyle: const TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 14,
-                                        color: Colors.white70,
-                                      ),
-                                      hintText: "Enter your password",
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                        borderSide: const BorderSide(
-                                          color: Colors.white38,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                        borderSide: const BorderSide(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _isObscure
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _isObscure = !_isObscure;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Password wajib diisi';
-                                      }
-                                      if (value.length < 6) {
-                                        return 'Password minimal 6 karakter';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 5),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {},
-                                  child: const Text(
-                                    "Forgot Password?",
-                                    style: TextStyle(
-                                      color: Color(0xFF888888),
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: isLoading
-                                      ? null
-                                      : () {
-                                          loginUser();
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 20,
-                                    ),
-                                    backgroundColor: const Color(0xFF283FB1),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(21),
-                                    ),
-                                  ),
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Text(
-                                          "Masuk",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'Poppins',
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
-                          ),
+                  // Logo
+                  Image.asset(
+                    "assets/images/image/logo.png",
+                    height: 100,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Title
+                  const Text(
+                    "Login",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: "Poppins",
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Email Field
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: const Text(
+                      "Email",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: "Poppins",
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      hintText: "Masukkan Email",
+                      filled: true,
+                      fillColor: Colors.grey[300],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 18,
+                        horizontal: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Password Field
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: const Text(
+                      "Password",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: "Poppins",
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: _isObscure,
+                    decoration: InputDecoration(
+                      hintText: "Masukkan Password",
+                      filled: true,
+                      fillColor: Colors.grey[300],
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 18,
+                        horizontal: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscure
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isObscure = !_isObscure;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Forgot Password
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: const Text(
+                        "Lupa Password?",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontFamily: "Poppins",
                         ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Belum Punya Akun? ",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            letterSpacing: -0.5,
-                            color: Color(0xFF888888),
-                          ),
+                  const SizedBox(height: 10),
+
+                  // Button Masuk
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : loginUser,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: const Color(0xFF4A5CF6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        TextButton(
-                          child: const Text(
-                            "Daftar",
-                            style: TextStyle(
-                              color: Color.fromRGBO(6, 46, 245, 1),
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Register(),
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text(
+                              "Masuk",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "Poppins",
+                                color: Colors.white,
                               ),
-                            );
-                          },
-                        ),
-                      ],
+                            ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Register Text
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Belum Punya Akun? ",
+                        style: TextStyle(
+                          fontFamily: "Poppins",
+                          color: Colors.grey,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Register(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Daftar",
+                          style: TextStyle(
+                            color: Color(0xFF4A5CF6),
+                            fontWeight: FontWeight.bold,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
