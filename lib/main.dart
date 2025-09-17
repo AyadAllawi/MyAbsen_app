@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/login.dart';
 import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
@@ -37,7 +36,7 @@ class MyApp extends StatelessWidget {
         '/logreg': (context) => const Logreg(),
         '/register_futsal': (context) => const Register(),
       },
-      home: HomePage(),
+      home: SplashScreen(),
     );
   }
 }

@@ -325,7 +325,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              "Ilham Sepriyadi",
+                              "Ayad Allawi",
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 26,
