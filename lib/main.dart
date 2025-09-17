@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/login.dart';
 import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 import 'package:myabsen_project/views/splashscreen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi locale data (misal: Indonesia)
+  await initializeDateFormatting('id_ID', null);
+
   runApp(const MyApp());
 }
 
@@ -29,16 +36,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginAbsen(),
         '/logreg': (context) => const Logreg(),
         '/register_futsal': (context) => const Register(),
-        // '/home_futsal': (context) => const Home(),
-        // '/bot': (context) => Bottom(),
-        // '/lapangan': (context) => LapanganScreen(),
-        // '/add': (context) => AddFieldScreen(
-        //   onFieldAdded: (field) {
-        //     print("Lapangan baru: ${field!.nama}");
-        //   },
-        // ),
       },
-      home: SplashScreen(),
+      home: HomePage(),
     );
   }
 }
