@@ -98,7 +98,7 @@ class _RegisterState extends State<Register> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                Image.asset("assets/images/logo.png", height: 100),
+                Image.asset("assets/images/image/logo.png", height: 100),
                 const SizedBox(height: 20),
                 const Text(
                   "Daftar",

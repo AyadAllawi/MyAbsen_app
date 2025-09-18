@@ -4,6 +4,7 @@ import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/login.dart';
 import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
+import 'package:myabsen_project/views/navbar/bottom.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 import 'package:myabsen_project/views/splashscreen.dart';
 

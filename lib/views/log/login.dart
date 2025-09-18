@@ -3,6 +3,7 @@ import 'package:myabsen_project/api/authentication_api.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/register.dart';
+import 'package:myabsen_project/views/navbar/bottom.dart';
 
 class LoginAbsen extends StatefulWidget {
   const LoginAbsen({super.key});
@@ -47,6 +48,10 @@ class _LoginAbsenState extends State<LoginAbsen> {
 
       if (!mounted) return;
 
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => BottomPage()),
+      );
       // ✅ Jika login berhasil
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -56,10 +61,6 @@ class _LoginAbsenState extends State<LoginAbsen> {
         ),
       );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
     } catch (e) {
       // ❌ Jika login gagal
       if (!mounted) return;
@@ -86,7 +87,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
               child: Column(
                 children: [
                   // Logo
-                  Image.asset("assets/images/logo.png", height: 100),
+                  Image.asset("assets/images/image/logo.png", height: 100),
                   const SizedBox(height: 20),
 
                   // Title

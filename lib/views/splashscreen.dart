@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
+import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
-import 'package:myabsen_project/views/onboarding/test.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -27,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLogin == true) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => Bottom()),
+          MaterialPageRoute(builder: (_) => Logreg()),
         );
       } else {
         Navigator.pushReplacement(

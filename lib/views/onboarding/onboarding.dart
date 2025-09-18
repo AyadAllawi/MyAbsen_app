@@ -21,7 +21,7 @@ class OnboardingPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/image/logo.png',
                       width: 95,
                       height: 80,
                     ),
@@ -41,7 +41,7 @@ class OnboardingPage extends StatelessWidget {
 
                 Center(
                   child: Image.asset(
-                    "assets/images/onboarding.png",
+                    "assets/images/image/onboarding.png",
                     height: 350,
                     width: 450,
                   ),
@@ -76,7 +76,7 @@ class OnboardingPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/image/logo.png',
                       width: 95,
                       height: 80,
                     ),
@@ -96,7 +96,7 @@ class OnboardingPage extends StatelessWidget {
 
                 Center(
                   child: Image.asset(
-                    "assets/images/oboarding1.png",
+                    "assets/images/image/oboarding1.png",
                     height: 350,
                     width: 450,
                   ),
@@ -130,7 +130,7 @@ class OnboardingPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/image/logo.png',
                       width: 95,
                       height: 80,
                     ),
@@ -150,7 +150,7 @@ class OnboardingPage extends StatelessWidget {
 
                 Center(
                   child: Image.asset(
-                    "assets/images/onboarding2.png",
+                    "assets/images/image/onboarding2.png",
                     height: 350,
                     width: 450,
                   ),

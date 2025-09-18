@@ -78,15 +78,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: _profileImage != null
-                              ? FileImage(_profileImage!)
-                              : const AssetImage(
-                                      "assets/images/foto/default.jpg",
-                                    )
-                                    as ImageProvider,
-                        ),
+                        // CircleAvatar(
+                        //   radius: 60,
+                        //   backgroundImage: _profileImage != null
+                        //       ? FileImage(_profileImage!)
+                        //       : const AssetImage(
+                        //               "assets/images/foto/default.jpg",
+                        //             )
+                        //             as ImageProvider,
+                        // ),
                       ],
                     ),
                     Positioned(

@@ -4,8 +4,8 @@ import 'package:myabsen_project/views/history.dart';
 import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/profile.dart';
 
-class Bottom extends StatelessWidget {
-  Bottom({super.key});
+class BottomPage extends StatelessWidget {
+  BottomPage({super.key});
   static const id = "/bot";
 
   final NavigationController controller = Get.put(NavigationController());
@@ -24,7 +24,13 @@ class Bottom extends StatelessWidget {
         ),
       ),
 
-      body: Obx(() => controller.screens[controller.selectedIndex.value]),
+      // ✅ pakai IndexedStack biar state tiap page gak ke-reset
+      body: Obx(
+        () => IndexedStack(
+          index: controller.selectedIndex.value,
+          children: controller.screens,
+        ),
+      ),
     );
   }
 
@@ -42,7 +48,9 @@ class NavigationController extends GetxController {
   final List<Widget> screens = [
     const HomePage(),
     const HistoryAbsenPage(),
+    // const PemesananPage(), // ✅ tambahin page ke-3
     ProfilePage(),
-    // ProfilePage(),
   ];
 }
+
+

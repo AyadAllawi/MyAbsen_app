@@ -334,24 +334,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 letterSpacing: -0.8,
                               ),
                             ),
-                            Text(
-                              "Ayad Allawi",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.8,
-                              ),
-                            ),
-                            Text(
-                              "Ayad Allawi",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.8,
-                              ),
-                            ),
                           ],
                         ),
 

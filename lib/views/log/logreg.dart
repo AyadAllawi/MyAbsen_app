@@ -21,7 +21,7 @@ class _LogregState extends State<Logreg> {
               width: 200,
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("assets/images/logo.png"),
+                  image: AssetImage("assets/images/image/logo.png"),
                   fit: BoxFit.cover,
                 ),
               ),
