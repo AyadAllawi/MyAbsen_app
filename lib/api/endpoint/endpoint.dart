@@ -1,18 +1,29 @@
 class Endpoint {
-  static const String baseURL = "https://appabsensi.mobileprojp.com";
-  static const String register = "$baseURL/api/register";
-  static const String login = "$baseURL/api/login";
-  static const String checkIn = "$baseURL/api/absen/check-in";
-  static const String checkOut = "$baseURL/api/absen/check-out";
-  static const String izin = "$baseURL/api/izin";
-  static const String deviceToken = "$baseURL/api/device-token";
-  static String absenToday(String date) =>
-      "$baseURL/api/absen/today?attendance_date=$date";
-  static String absenStats(String start, String end) =>
-      "$baseURL/api/absen/stats?start=$start&end=$end";
-  static const String deleteAbsen = "$baseURL/api/absen/today?attendance_date";
-  static const String profile = "$baseURL/api/profile";
-  static const String training = "$baseURL/api/trainings";
-  static const String batches = "$baseURL/api/batches";
-  static const String history = "$baseURL/api/absen/history";
+  static const String baseUrl = "https://appabsensi.mobileprojp.com/api";
+  static const String register = "$baseUrl/register";
+  static const String login = "$baseUrl/login";
+  static const String forgotPassword = "$baseUrl/forgot-password";
+  static const String resetPassword = "$baseUrl/reset-password";
+
+  // absen
+  static const String checkIn = "$baseUrl/absen-check-in";
+  static const String checkOut = "$baseUrl/absen-check-out";
+  static const String absenToday = "$baseUrl/absen/today";
+  static const String absenStats = "$baseUrl/absen/stats";
+
+  // history
+  static const String history = "$baseUrl/history-absen";
+
+  // profile
+  static const String profile = "$baseUrl/profile";
+  static const String profilePhoto = "$baseUrl/profile/photo"; // if different
+  static const String updateProfile = "$baseUrl/profile";
+
+  // izin, delete absen
+  static const String izin = "$baseUrl/izin";
+  static const String deleteAbsen = "$baseUrl/delete-absen";
+
+  // additional endpoints
+  static const String training = "$baseUrl/trainings";
+  static const String batches = "$baseUrl/batches";
 }

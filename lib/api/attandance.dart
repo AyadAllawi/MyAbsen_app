@@ -1,13 +1,21 @@
 import 'dart:convert';
 
-import 'package:absensi_apps/api/endpoint/endpoint.dart';
-import 'package:absensi_apps/models/absen_check_out_model.dart';
-import 'package:absensi_apps/models/absen_masuk_model.dart';
-import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
+import 'package:myabsen_project/api/endpoint/endpoint.dart';
+import 'package:myabsen_project/model/absen_chek_in.dart';
+import 'package:myabsen_project/model/absen_chek_out.dart';
+import 'package:myabsen_project/preference/shared_preference.dart';
 
 class AttendanceAPI {
+  static dynamic _safeDecode(String? body) {
+    if (body == null || body.isEmpty) return null;
+    try {
+      return json.decode(body);
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<AbsenCheckInModel> checkIn({
     required double lat,
     required double lng,
@@ -15,31 +23,24 @@ class AttendanceAPI {
   }) async {
     final url = Uri.parse(Endpoint.checkIn);
     final token = await PreferenceHandler.getToken();
-    final now = DateTime.now();
-    final date = DateFormat('yyyy-MM-dd').format(now);
-    final time = DateFormat('HH:mm').format(now);
-
-    final response = await http.post(
+    final res = await http.post(
       url,
-      body: {
-        'attendance_date': date,
-        'check_in': time,
-        'check_in_lat': lat.toString(),
-        'check_in_lng': lng.toString(),
-        'check_in_address': address,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
       },
-      headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
+      body: jsonEncode({
+        "attendance_date": DateTime.now().toIso8601String().split('T').first,
+        "check_in": DateTime.now().toIso8601String(),
+        "check_in_lat": lat.toString(),
+        "check_in_lng": lng.toString(),
+        "check_in_address": address,
+      }),
     );
-
-    print("Check-In Status: ${response.statusCode}");
-    print("Check-In Response: ${response.body}");
-
-    if (response.statusCode == 200) {
-      return AbsenCheckInModel.fromJson(json.decode(response.body));
-    } else {
-      final error = json.decode(response.body);
-      throw Exception(error["message"] ?? "Gagal melakukan check-in");
-    }
+    final body = _safeDecode(res.body);
+    if (res.statusCode == 200) return AbsenCheckInModel.fromJson(body);
+    throw Exception(body?["message"] ?? "Gagal check-in");
   }
 
   static Future<AbsenCheckOutModel> checkOut({
@@ -49,21 +50,46 @@ class AttendanceAPI {
   }) async {
     final url = Uri.parse(Endpoint.checkOut);
     final token = await PreferenceHandler.getToken();
-
-    final response = await http.post(
+    final res = await http.post(
       url,
-      body: {'lat': lat.toString(), 'lng': lng.toString(), 'address': address},
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "check_out": DateTime.now().toIso8601String(),
+        "check_out_lat": lat.toString(),
+        "check_out_lng": lng.toString(),
+        "check_out_address": address,
+      }),
+    );
+    final body = _safeDecode(res.body);
+    if (res.statusCode == 200) return AbsenCheckOutModel.fromJson(body);
+    throw Exception(body?["message"] ?? "Gagal check-out");
+  }
+
+  static Future<dynamic> getToday(String date) async {
+    final url = Uri.parse("${Endpoint.absenToday}?attendance_date=$date");
+    final token = await PreferenceHandler.getToken();
+    final res = await http.get(
+      url,
       headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
     );
+    final body = _safeDecode(res.body);
+    if (res.statusCode == 200) return body;
+    throw Exception(body?["message"] ?? "Gagal mengambil absen hari ini");
+  }
 
-    print("Check-Out Status: ${response.statusCode}");
-    print("Check-Out Response: ${response.body}");
-
-    if (response.statusCode == 200) {
-      return AbsenCheckOutModel.fromJson(json.decode(response.body));
-    } else {
-      final error = json.decode(response.body);
-      throw Exception(error["message"] ?? "Gagal melakukan check-out");
-    }
+  static Future<dynamic> getStats() async {
+    final url = Uri.parse(Endpoint.absenStats);
+    final token = await PreferenceHandler.getToken();
+    final res = await http.get(
+      url,
+      headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
+    );
+    final body = _safeDecode(res.body);
+    if (res.statusCode == 200) return body;
+    throw Exception(body?["message"] ?? "Gagal mengambil stats");
   }
 }

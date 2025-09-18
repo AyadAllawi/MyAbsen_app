@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:myabsen_project/api/register_user.dart';
 import 'package:myabsen_project/views/log/login.dart';
 
 class Register extends StatefulWidget {
@@ -17,6 +21,7 @@ class _RegisterState extends State<Register> {
   final TextEditingController trainingController = TextEditingController();
   final TextEditingController batchController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
   String? selectedTraining;
   String? selectedBatch;
   String? selectedGender;
@@ -25,14 +30,66 @@ class _RegisterState extends State<Register> {
   Future<void> registerUser() async {
     setState(() => isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2)); // simulasi API
+    try {
+      // contoh file foto dummy, nanti bisa pake imagePicker
+      File fakeImage = File("assets/images/logo.png");
 
-    setState(() => isLoading = false);
+      await AuthenticationAPI.registerUser(
+        name: nameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        jenisKelamin: selectedGender ?? "",
+        profilePhoto: fakeImage,
+        batchId:
+            int.tryParse((selectedBatch ?? "1").replaceAll("Batch ", "")) ?? 1,
+        trainingId: 1, // sementara fix, bisa diganti dynamic
+      );
+
+      // ✅ sukses daftar
+      await _showLottieDialog("assets/lottie/success.json");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registrasi berhasil, silakan login")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginAbsen()),
+      );
+    } catch (e) {
+      final errorMessage = e.toString();
+
+      if (errorMessage.contains("sudah terdaftar")) {
+        // ⚠️ email sudah ada
+        await _showLottieDialog("assets/lottie/warning.json");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Email sudah terdaftar")));
+      } else {
+        // ❌ gagal umum
+        await _showLottieDialog("assets/lottie/error.json");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal mendaftar: $e")));
+      }
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _showLottieDialog(String asset) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(child: Lottie.asset(asset, repeat: false)),
+    );
+    await Future.delayed(const Duration(seconds: 2));
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -41,12 +98,8 @@ class _RegisterState extends State<Register> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-
-                // Logo
-                Image.asset("assets/images/image/logo.png", height: 100),
+                Image.asset("assets/images/logo.png", height: 100),
                 const SizedBox(height: 20),
-
-                // Title
                 const Text(
                   "Daftar",
                   style: TextStyle(
@@ -60,12 +113,18 @@ class _RegisterState extends State<Register> {
 
                 // Nama
                 _buildLabel("Nama"),
-                _buildInputField(controller: nameController, hint: "Masukkan nama lengkap"),
+                _buildInputField(
+                  controller: nameController,
+                  hint: "Masukkan nama lengkap",
+                ),
                 const SizedBox(height: 15),
 
                 // Email
                 _buildLabel("Email"),
-                _buildInputField(controller: emailController, hint: "Masukkan email anda"),
+                _buildInputField(
+                  controller: emailController,
+                  hint: "Masukkan email anda",
+                ),
                 const SizedBox(height: 15),
 
                 // Training
@@ -78,20 +137,13 @@ class _RegisterState extends State<Register> {
                     "Web Programming",
                     "Perhotelan",
                     "Tata Boga",
-                    "Content Creator",
-                    "Make Up Artist",
-                    "Multi Media",
-                    "Design Grafis Madya",
-                    "Data Manajemen Staff",
-                    "Akuntansi Junior",
-                    "Barista",
                   ],
                   onChanged: (value) {
                     setState(() => selectedTraining = value);
                     trainingController.text = value ?? "";
                   },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 10),
 
                 // Batch & Kelamin sejajar
                 Row(
@@ -104,7 +156,7 @@ class _RegisterState extends State<Register> {
                           _buildDropdown(
                             value: selectedBatch,
                             hint: "Pilih Batch",
-                            items: const ["Batch 1", "Batch 2", "Batch 3", "Batch 4"],
+                            items: const ["Batch 1", "Batch 2", "Batch 3"],
                             onChanged: (value) {
                               setState(() => selectedBatch = value);
                               batchController.text = value ?? "";
@@ -113,7 +165,7 @@ class _RegisterState extends State<Register> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 11),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +175,8 @@ class _RegisterState extends State<Register> {
                             value: selectedGender,
                             hint: "Pilih Kelamin",
                             items: const ["Laki-laki", "Perempuan"],
-                            onChanged: (value) => setState(() => selectedGender = value),
+                            onChanged: (value) =>
+                                setState(() => selectedGender = value),
                           ),
                         ],
                       ),
@@ -137,32 +190,50 @@ class _RegisterState extends State<Register> {
                 TextFormField(
                   controller: passwordController,
                   obscureText: !isPasswordVisible,
-                  decoration: _inputDecoration("Masukkan password anda").copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
+                  decoration: _inputDecoration("Masukkan password anda")
+                      .copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () => setState(
+                            () => isPasswordVisible = !isPasswordVisible,
+                          ),
+                        ),
                       ),
-                      onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+                ),
+                const SizedBox(height: 10),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    child: const Text(
+                      "Lupa Password?",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontFamily: "Poppins",
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 10),
 
-                Text("Lupa Password!", style: TextStyle(
-                  color: Color(0xFF000000)
-                ),),
-const SizedBox(height: 20),
                 // Tombol Daftar
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : () async {
-                      if (_formKey.currentState!.validate()) {
-                        await registerUser();
-                        Navigator.pop(context);
-                      }
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              await registerUser();
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4A5CF6),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -183,7 +254,7 @@ const SizedBox(height: 20),
                           ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // Sudah punya akun
                 Row(
@@ -200,7 +271,9 @@ const SizedBox(height: 20),
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const LoginAbsen()),
+                          MaterialPageRoute(
+                            builder: (context) => const LoginAbsen(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -237,7 +310,10 @@ const SizedBox(height: 20),
     );
   }
 
-  Widget _buildInputField({required TextEditingController controller, required String hint}) {
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
     return TextFormField(
       controller: controller,
       decoration: _inputDecoration(hint),
@@ -251,10 +327,12 @@ const SizedBox(height: 20),
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: _inputDecoration(hint),
       dropdownColor: Colors.white,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items: items
+          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+          .toList(),
       onChanged: onChanged,
     );
   }

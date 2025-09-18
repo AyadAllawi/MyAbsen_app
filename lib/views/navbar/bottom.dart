@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:myabsen_project/views/history.dart';
+import 'package:myabsen_project/views/home.dart';
+import 'package:myabsen_project/views/profile.dart';
 
 class Bottom extends StatelessWidget {
   Bottom({super.key});
@@ -27,18 +30,9 @@ class Bottom extends StatelessWidget {
 
   static const List<NavigationDestination> _navDestinations = [
     NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
-    NavigationDestination(
-      icon: Icon(Icons.sports_soccer), 
-      label: 'Lapangan',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.book_online), 
-      label: 'Pemesanan',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person), 
-      label: 'Profile',
-    ),
+    NavigationDestination(icon: Icon(Icons.sports_soccer), label: 'Lapangan'),
+    NavigationDestination(icon: Icon(Icons.book_online), label: 'Pemesanan'),
+    NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
   ];
 }
 
@@ -46,9 +40,9 @@ class NavigationController extends GetxController {
   final RxInt selectedIndex = 0.obs;
 
   final List<Widget> screens = [
-    // const Home(),
-    // const LapanganScreen(),
-    // PemesananPage(),
+    const HomePage(),
+    const HistoryAbsenPage(),
+    ProfilePage(),
     // ProfilePage(),
   ];
 }

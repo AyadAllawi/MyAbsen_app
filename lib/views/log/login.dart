@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myabsen_project/api/authentication_api.dart';
+import 'package:myabsen_project/model/login.dart';
+import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/register.dart';
 
 class LoginAbsen extends StatefulWidget {
@@ -17,7 +20,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
   bool _isObscure = true;
   bool isLoading = false;
 
-  void loginUser() async {
+  Future<void> loginUser() async {
     setState(() {
       isLoading = true;
     });
@@ -35,17 +38,45 @@ class _LoginAbsenState extends State<LoginAbsen> {
       return;
     }
 
-    // TODO: tambahkan logika login (API)
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // 🔥 Panggil API login
+      final LoginModel response = await AuthenticationAPI.loginUser(
+        email: email,
+        password: password,
+      );
 
-    setState(() {
-      isLoading = false;
-    });
+      if (!mounted) return;
+
+      // ✅ Jika login berhasil
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Selamat datang, ${response.data?.user?.name ?? 'User'}",
+          ),
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } catch (e) {
+      // ❌ Jika login gagal
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Login gagal: $e")));
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -55,10 +86,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
               child: Column(
                 children: [
                   // Logo
-                  Image.asset(
-                    "assets/images/image/logo.png",
-                    height: 100,
-                  ),
+                  Image.asset("assets/images/logo.png", height: 100),
                   const SizedBox(height: 20),
 
                   // Title
@@ -73,14 +101,11 @@ class _LoginAbsenState extends State<LoginAbsen> {
                   const SizedBox(height: 40),
 
                   // Email Field
-                  Align(
+                  const Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
+                    child: Text(
                       "Email",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: "Poppins",
-                      ),
+                      style: TextStyle(fontSize: 14, fontFamily: "Poppins"),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -104,14 +129,11 @@ class _LoginAbsenState extends State<LoginAbsen> {
                   const SizedBox(height: 20),
 
                   // Password Field
-                  Align(
+                  const Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
+                    child: Text(
                       "Password",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: "Poppins",
-                      ),
+                      style: TextStyle(fontSize: 14, fontFamily: "Poppins"),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -132,9 +154,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isObscure
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          _isObscure ? Icons.visibility_off : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -151,9 +171,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () {},
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                      ),
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
                       child: const Text(
                         "Lupa Password?",
                         style: TextStyle(
@@ -178,9 +196,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
                         ),
                       ),
                       child: isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               "Masuk",
                               style: TextStyle(

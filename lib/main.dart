@@ -37,7 +37,6 @@ class MyApp extends StatelessWidget {
         '/logreg': (context) => const Logreg(),
         '/register_futsal': (context) => const Register(),
         '/home': (context) => const HomePage(),
-
       },
       home: SplashScreen(),
     );

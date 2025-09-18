@@ -8,13 +8,14 @@ class PreferenceHandler {
   static const String batchKey = "batch";
   static const String loginKey = "login";
 
-  static Future<void> saveUserData(
-    String token,
-    int userId,
-    String email,
-    String name,
-    String batch,
-  ) async {
+  /// Simpan semua data user sekaligus
+  static Future<void> saveUserData({
+    required String token,
+    required int userId,
+    required String email,
+    required String name,
+    required String batch,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(tokenKey, token);
     await prefs.setInt(userIdKey, userId);
@@ -24,7 +25,8 @@ class PreferenceHandler {
     await prefs.setBool(loginKey, true);
   }
 
-  static void saveToken(String token) async {
+  /// Simpan token aja
+  static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(tokenKey, token);
   }
@@ -32,6 +34,11 @@ class PreferenceHandler {
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(tokenKey);
+  }
+
+  static Future<void> removeToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(tokenKey);
   }
 
   static Future<int?> getUserId() async {
@@ -64,22 +71,19 @@ class PreferenceHandler {
     await prefs.setString(batchKey, batch);
   }
 
-  static Future<bool?> getLoginStatus() async {
+  static Future<bool> getLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(loginKey);
+    return prefs.getBool(loginKey) ?? false;
   }
 
-  static Future<bool?> getLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(loginKey);
-  }
-
+  /// Logout clear semua data
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
     await prefs.remove(userIdKey);
     await prefs.remove(userEmailKey);
     await prefs.remove(userNameKey);
+    await prefs.remove(batchKey);
     await prefs.setBool(loginKey, false);
   }
 }

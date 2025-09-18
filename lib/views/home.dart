@@ -295,7 +295,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 1),
               child: SlideTransition(
                 position:
                     Tween<Offset>(

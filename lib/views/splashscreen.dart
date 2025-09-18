@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void isLogin() async {
-    bool? isLogin = await PreferenceHandler.getLogin();
+    bool? isLogin = await PreferenceHandler.getLoginStatus();
 
     Future.delayed(Duration(seconds: 3)).then((value) async {
       print(isLogin);
@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(height: 290),
             Container(
               child: Image(
-                image: AssetImage("assets/images/image/logo.png"),
+                image: AssetImage("assets/images/logo.png"),
                 width: 300,
                 height: 250,
                 fit: BoxFit.cover,
