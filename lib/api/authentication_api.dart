@@ -3,19 +3,33 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:myabsen_project/api/endpoint/endpoint.dart';
+import 'package:myabsen_project/model/get_bacth.dart';
+import 'package:myabsen_project/model/get_list_training_model.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/model/register.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
 
 class AuthenticationAPI {
-  /// Decode JSON dengan aman biar ga langsung error
+  /// Decode JSON aman biar ga error
   static dynamic _safeDecode(String? body) {
     if (body == null || body.isEmpty) return null;
     try {
       return json.decode(body);
-    } catch (_) {
+    } catch (e) {
+      print("❌ JSON Decode Error: $e");
       return null;
     }
+  }
+
+  /// Helper untuk ambil pesan error dari response
+  static String _extractErrorMessage(dynamic body, String defaultMsg) {
+    if (body == null) return defaultMsg;
+    if (body is Map) {
+      if (body["message"] != null) return body["message"].toString();
+      if (body["error"] != null) return body["error"].toString();
+      if (body["errors"] != null) return body["errors"].toString();
+    }
+    return defaultMsg;
   }
 
   /// REGISTER USER
@@ -32,6 +46,8 @@ class AuthenticationAPI {
 
     final readImage = await profilePhoto.readAsBytes();
     final b64 = base64Encode(readImage);
+
+    // ⚠️ cek dulu apakah backend lu butuh prefix
     final imageWithPrefix = "data:image/png;base64,$b64";
 
     final payload = {
@@ -44,6 +60,8 @@ class AuthenticationAPI {
       "training_id": trainingId,
     };
 
+    print("📤 REGISTER Payload: $payload");
+
     final res = await http.post(
       url,
       headers: {
@@ -54,11 +72,12 @@ class AuthenticationAPI {
     );
 
     final body = _safeDecode(res.body);
+    print("📥 REGISTER Response: $body");
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return RegisterModel.fromJson(body);
     } else {
-      final msg = body?["message"] ?? "Gagal register";
+      final msg = _extractErrorMessage(body, "Gagal register");
       throw Exception(msg);
     }
   }
@@ -71,6 +90,8 @@ class AuthenticationAPI {
     final url = Uri.parse(Endpoint.login);
     final payload = {"email": email, "password": password};
 
+    print("📤 LOGIN Payload: $payload");
+
     final res = await http.post(
       url,
       headers: {
@@ -81,10 +102,9 @@ class AuthenticationAPI {
     );
 
     final body = _safeDecode(res.body);
+    print("📥 LOGIN Response: $body");
 
     if (res.statusCode == 200) {
-      print("LOGIN RESPONSE: $body");
-
       // ambil token fleksibel
       final token =
           body?["token"] ??
@@ -99,7 +119,7 @@ class AuthenticationAPI {
       final userEmail = user?["email"];
       final batch = user?["batch"]?.toString() ?? "";
 
-      // simpan data user kalau ada
+      // simpan data user
       if (token != null &&
           userId != null &&
           userEmail != null &&
@@ -118,7 +138,7 @@ class AuthenticationAPI {
 
       return LoginModel.fromJson(body);
     } else {
-      final msg = body?["message"] ?? "Login gagal";
+      final msg = _extractErrorMessage(body, "Login gagal");
       throw Exception(msg);
     }
   }
@@ -136,9 +156,11 @@ class AuthenticationAPI {
     );
 
     final body = _safeDecode(res.body);
+    print("📥 FORGOT Response: $body");
 
     if (res.statusCode != 200) {
-      throw Exception(body?["message"] ?? "Gagal request forgot password");
+      final msg = _extractErrorMessage(body, "Gagal request forgot password");
+      throw Exception(msg);
     }
   }
 
@@ -159,14 +181,63 @@ class AuthenticationAPI {
     );
 
     final body = _safeDecode(res.body);
+    print("📥 RESET Response: $body");
 
     if (res.statusCode != 200) {
-      throw Exception(body?["message"] ?? "Gagal reset password");
+      final msg = _extractErrorMessage(body, "Gagal reset password");
+      throw Exception(msg);
+    }
+  }
+
+  /// GET LIST BATCH
+  static Future<List<Batches>> getBatchList() async {
+    final url = Uri.parse(Endpoint.getBatch);
+    final res = await http.get(
+      url,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+    );
+
+    final body = _safeDecode(res.body);
+    print("📥 BATCH Response: $body");
+
+    if (res.statusCode == 200) {
+      final List data = body?["data"] ?? [];
+      return data.map((e) => Batches.fromJson(e)).toList();
+    } else {
+      final msg = body?["message"] ?? "Gagal ambil batch list";
+      throw Exception(msg);
+    }
+  }
+
+  /// GET LIST TRAINING
+  static Future<List<Datum>> getTrainingList() async {
+    final url = Uri.parse(Endpoint.getTraining);
+    final res = await http.get(
+      url,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+    );
+
+    final body = _safeDecode(res.body);
+    print("📥 TRAINING Response: $body");
+
+    if (res.statusCode == 200) {
+      final model = GetListTrainingModel.fromJson(body);
+      return model.data ?? [];
+    } else {
+      final msg = body?["message"] ?? "Gagal ambil training list";
+      throw Exception(msg);
     }
   }
 
   /// LOGOUT
   static Future<void> logout() async {
     await PreferenceHandler.logout();
+    print("✅ User logged out");
   }
 }

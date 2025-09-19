@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myabsen_project/api/authentication_api.dart';
 import 'package:myabsen_project/model/login.dart';
-import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/register.dart';
 import 'package:myabsen_project/views/navbar/bottom.dart';
 
@@ -60,7 +59,6 @@ class _LoginAbsenState extends State<LoginAbsen> {
           ),
         ),
       );
-
     } catch (e) {
       // ❌ Jika login gagal
       if (!mounted) return;
@@ -227,7 +225,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const Register(),
+                              builder: (context) => const RegisterPage(),
                             ),
                           );
                         },

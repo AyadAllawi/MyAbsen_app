@@ -3,7 +3,6 @@ import 'package:myabsen_project/preference/shared_preference.dart';
 import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   static const id = "/splash_screen";
@@ -49,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(height: 290),
             Container(
               child: Image(
-                image: AssetImage("assets/images/logo.png"),
+                image: AssetImage("assets/images/image/logo.png"),
                 width: 300,
                 height: 250,
                 fit: BoxFit.cover,

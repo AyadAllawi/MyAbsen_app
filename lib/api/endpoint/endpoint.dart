@@ -18,6 +18,8 @@ class Endpoint {
   static const String profile = "$baseUrl/profile";
   static const String profilePhoto = "$baseUrl/profile/photo"; // if different
   static const String updateProfile = "$baseUrl/profile";
+  static const String getBatch = "$baseUrl/batches";
+  static const String getTraining = "$baseUrl/trainings";
 
   // izin, delete absen
   static const String izin = "$baseUrl/izin";

@@ -79,7 +79,9 @@ class _LogregState extends State<Logreg> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const Register()),
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterPage(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

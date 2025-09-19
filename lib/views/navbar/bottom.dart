@@ -24,7 +24,6 @@ class BottomPage extends StatelessWidget {
         ),
       ),
 
-      // ✅ pakai IndexedStack biar state tiap page gak ke-reset
       body: Obx(
         () => IndexedStack(
           index: controller.selectedIndex.value,
@@ -37,7 +36,6 @@ class BottomPage extends StatelessWidget {
   static const List<NavigationDestination> _navDestinations = [
     NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
     NavigationDestination(icon: Icon(Icons.sports_soccer), label: 'Lapangan'),
-    NavigationDestination(icon: Icon(Icons.book_online), label: 'Pemesanan'),
     NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
   ];
 }
@@ -46,11 +44,8 @@ class NavigationController extends GetxController {
   final RxInt selectedIndex = 0.obs;
 
   final List<Widget> screens = [
-    const HomePage(),
+    HomePage(),
     const HistoryAbsenPage(),
-    // const PemesananPage(), // ✅ tambahin page ke-3
     ProfilePage(),
   ];
 }
-
-

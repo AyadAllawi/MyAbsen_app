@@ -1,51 +1,143 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:myabsen_project/api/register_user.dart';
+import 'package:myabsen_project/api/authentication_api.dart';
+import 'package:myabsen_project/model/get_bacth.dart';
+import 'package:myabsen_project/model/get_list_training_model.dart';
 import 'package:myabsen_project/views/log/login.dart';
 
-class Register extends StatefulWidget {
-  const Register({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
   static const id = "/register";
 
   @override
-  State<Register> createState() => _RegisterState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterState extends State<Register> {
-  bool isPasswordVisible = false;
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
+
+  // Controller
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController trainingController = TextEditingController();
-  final TextEditingController batchController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  String? selectedTraining;
-  String? selectedBatch;
+  // API data
+  List<Batches> batchList = [];
+  List<Datum> trainingList = [];
+
+  Batches? selectedBatchObj;
+  Datum? selectedTrainingObj;
   String? selectedGender;
+
+  File? _image;
   bool isLoading = false;
+  bool isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final batches = await AuthenticationAPI.getBatchList();
+      final trainings = await AuthenticationAPI.getTrainingList();
+
+      setState(() {
+        batchList = batches;
+        trainingList = trainings;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal ambil data: $e")));
+    }
+  }
+
+  // FUNGSI _pickImage YANG DIUBAH - TAMBAH FITUR KAMERA
+  Future<void> _pickImage() async {
+    // Tampilkan bottom sheet untuk pilihan
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Pilih dari Gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Ambil Foto'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _getImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // FUNGSI BARU UNTUK MENDAPATKAN GAMBAR
+  Future<void> _getImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 600,
+        imageQuality: 80,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      print("Error picking image: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengambil gambar')));
+    }
+  }
 
   Future<void> registerUser() async {
+    if (_image == null) {
+      Get.snackbar("Error", "Foto wajib diupload");
+      return;
+    }
+    if (selectedBatchObj == null || selectedTrainingObj == null) {
+      Get.snackbar("Error", "Batch dan Training wajib dipilih");
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
-      // contoh file foto dummy, nanti bisa pake imagePicker
-      File fakeImage = File("assets/images/logo.png");
-
       await AuthenticationAPI.registerUser(
         name: nameController.text,
         email: emailController.text,
         password: passwordController.text,
         jenisKelamin: selectedGender ?? "",
-        profilePhoto: fakeImage,
-        batchId:
-            int.tryParse((selectedBatch ?? "1").replaceAll("Batch ", "")) ?? 1,
-        trainingId: 1, // sementara fix, bisa diganti dynamic
+        profilePhoto: _image!,
+        batchId: selectedBatchObj?.id ?? 1,
+        trainingId: selectedTrainingObj?.id ?? 1,
       );
 
-      // ✅ sukses daftar
       await _showLottieDialog("assets/lottie/success.json");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Registrasi berhasil, silakan login")),
@@ -57,15 +149,12 @@ class _RegisterState extends State<Register> {
       );
     } catch (e) {
       final errorMessage = e.toString();
-
       if (errorMessage.contains("sudah terdaftar")) {
-        // ⚠️ email sudah ada
         await _showLottieDialog("assets/lottie/warning.json");
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Email sudah terdaftar")));
       } else {
-        // ❌ gagal umum
         await _showLottieDialog("assets/lottie/error.json");
         ScaffoldMessenger.of(
           context,
@@ -84,6 +173,35 @@ class _RegisterState extends State<Register> {
     );
     await Future.delayed(const Duration(seconds: 2));
     Navigator.pop(context);
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.black45),
+      filled: true,
+      fillColor: Colors.grey.shade300,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          fontFamily: "Poppins",
+          color: Colors.black,
+        ),
+      ),
+    );
   }
 
   @override
@@ -113,68 +231,90 @@ class _RegisterState extends State<Register> {
 
                 // Nama
                 _buildLabel("Nama"),
-                _buildInputField(
+                TextFormField(
                   controller: nameController,
-                  hint: "Masukkan nama lengkap",
+                  decoration: _inputDecoration("Masukkan nama lengkap"),
                 ),
                 const SizedBox(height: 15),
 
                 // Email
                 _buildLabel("Email"),
-                _buildInputField(
+                TextFormField(
                   controller: emailController,
-                  hint: "Masukkan email anda",
+                  decoration: _inputDecoration("Masukkan email anda"),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 25),
 
-                // Training
+                // Training Dropdown
                 _buildLabel("Training"),
-                _buildDropdown(
-                  value: selectedTraining,
-                  hint: "Pilih Training",
-                  items: const [
-                    "Mobile Programming",
-                    "Web Programming",
-                    "Perhotelan",
-                    "Tata Boga",
-                  ],
-                  onChanged: (value) {
-                    setState(() => selectedTraining = value);
-                    trainingController.text = value ?? "";
-                  },
+                DropdownButtonFormField<Datum>(
+                  initialValue: selectedTrainingObj,
+                  decoration: _inputDecoration("Pilih Training"),
+                  items: trainingList
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(
+                            t.title ?? "",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => selectedTrainingObj = value),
                 ),
                 const SizedBox(height: 10),
 
-                // Batch & Kelamin sejajar
                 Row(
                   children: [
+                    // Batch Dropdown
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildLabel("Batch"),
-                          _buildDropdown(
-                            value: selectedBatch,
-                            hint: "Pilih Batch",
-                            items: const ["Batch 1", "Batch 2", "Batch 3"],
-                            onChanged: (value) {
-                              setState(() => selectedBatch = value);
-                              batchController.text = value ?? "";
-                            },
+                          DropdownButtonFormField<Batches>(
+                            initialValue: selectedBatchObj,
+                            decoration: _inputDecoration("Pilih Batch"),
+                            items: batchList
+                                .map(
+                                  (b) => DropdownMenuItem(
+                                    value: b,
+                                    child: Text(
+                                      b.batchKe?.toString() ?? "Batch",
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => selectedBatchObj = value),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 11),
+
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildLabel("Kelamin"),
-                          _buildDropdown(
-                            value: selectedGender,
-                            hint: "Pilih Kelamin",
-                            items: const ["Laki-laki", "Perempuan"],
+                          DropdownButtonFormField<String>(
+                            initialValue: selectedGender,
+                            decoration: _inputDecoration("Pilih Kelamin"),
+                            items: ["L", "P"]
+                                .map(
+                                  (gender) => DropdownMenuItem(
+                                    value: gender,
+                                    child: Text(gender),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: (value) =>
                                 setState(() => selectedGender = value),
                           ),
@@ -205,23 +345,49 @@ class _RegisterState extends State<Register> {
                         ),
                       ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: const Text(
-                      "Lupa Password?",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontFamily: "Poppins",
-                      ),
+                // Upload Foto - TAMBAH PETUNJUK KAMERA/GALLERY
+                _buildLabel("Upload Foto"),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(30),
                     ),
+                    child: _image == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "Tap to select image",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              Text(
+                                "(Kamera atau Gallery)",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(30),
+                            child: Image.file(_image!, fit: BoxFit.cover),
+                          ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
                 // Tombol Daftar
                 SizedBox(
@@ -229,9 +395,9 @@ class _RegisterState extends State<Register> {
                   child: ElevatedButton(
                     onPressed: isLoading
                         ? null
-                        : () async {
+                        : () {
                             if (_formKey.currentState!.validate()) {
-                              await registerUser();
+                              registerUser();
                             }
                           },
                     style: ElevatedButton.styleFrom(
@@ -254,9 +420,8 @@ class _RegisterState extends State<Register> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 10),
 
-                // Sudah punya akun
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -271,9 +436,7 @@ class _RegisterState extends State<Register> {
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginAbsen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const LoginAbsen()),
                         );
                       },
                       child: const Text(
@@ -291,62 +454,6 @@ class _RegisterState extends State<Register> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          fontFamily: "Poppins",
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String hint,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: _inputDecoration(hint),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String? value,
-    required String hint,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: _inputDecoration(hint),
-      dropdownColor: Colors.white,
-      items: items
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-          .toList(),
-      onChanged: onChanged,
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.black45),
-      filled: true,
-      fillColor: Colors.grey.shade300,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide.none,
       ),
     );
   }
