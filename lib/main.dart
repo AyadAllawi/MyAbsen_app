@@ -4,6 +4,7 @@ import 'package:myabsen_project/views/home.dart';
 import 'package:myabsen_project/views/log/login.dart';
 import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
+import 'package:myabsen_project/views/navbar/bottom.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 import 'package:myabsen_project/views/splashscreen.dart';
 
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         '/register_futsal': (context) => const RegisterPage(),
         '/home': (context) => HomePage(),
       },
-      home: SplashScreen(),
+      home: BottomPage(),
     );
   }
 }

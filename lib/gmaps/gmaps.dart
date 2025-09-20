@@ -3,6 +3,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'package:myabsen_project/contans/office_location.dart';
+
 class GoogleMapsScreen extends StatefulWidget {
   const GoogleMapsScreen({super.key});
 
@@ -12,11 +14,12 @@ class GoogleMapsScreen extends StatefulWidget {
 
 class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   GoogleMapController? mapController;
-  LatLng _currentPosition = LatLng(-6.200000, 106.816666); // Default to Jakarta
-  double lat = -6.200000;
-  double long = 106.816666;
+  LatLng _currentPosition = OfficeLocation.kantor;
+  double lat = OfficeLocation.kantor.latitude;
+  double long = OfficeLocation.kantor.longitude;
   String _currentAddress = "Alamat tidak ditemukan";
   Marker? _marker;
+
   @override
   void initState() {
     super.initState();

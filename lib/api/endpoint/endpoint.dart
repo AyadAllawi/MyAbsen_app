@@ -6,8 +6,8 @@ class Endpoint {
   static const String resetPassword = "$baseUrl/reset-password";
 
   // absen
-  static const String checkIn = "$baseUrl/absen-check-in";
-  static const String checkOut = "$baseUrl/absen-check-out";
+  static const String checkIn = "$baseUrl/absen/check-in";
+  static const String checkOut = "$baseUrl/absen/check-out";
   static const String absenToday = "$baseUrl/absen/today";
   static const String absenStats = "$baseUrl/absen/stats";
 

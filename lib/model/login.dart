@@ -44,6 +44,7 @@ class User {
   dynamic emailVerifiedAt;
   DateTime? createdAt;
   DateTime? updatedAt;
+  String? batch;
 
   User({
     this.id,
@@ -52,6 +53,7 @@ class User {
     this.emailVerifiedAt,
     this.createdAt,
     this.updatedAt,
+    this.batch,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
