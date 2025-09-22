@@ -11,8 +11,11 @@ import 'package:myabsen_project/contans/office_location.dart';
 import 'package:myabsen_project/model/absen_chek_in.dart';
 import 'package:myabsen_project/model/absen_chek_out.dart';
 import 'package:myabsen_project/widgets/succes.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -62,7 +65,7 @@ class _HomePageState extends State<HomePage> {
   void _updateTime() {
     final now = DateTime.now();
     setState(() {
-      jam = DateFormat("hh:mm a", "id_ID").format(now);
+      jam = DateFormat("HH:mm", "id_ID").format(now);
       tanggal = DateFormat("EEEE, d MMMM y", "id_ID").format(now);
     });
   }
@@ -104,8 +107,6 @@ class _HomePageState extends State<HomePage> {
     try {
       final profileData = await ProfileAPI.getProfile();
       setState(() {
-        // PERBAIKAN: Mengambil objek 'data' dari respons API
-        // ini yang membuat nama dan foto profil muncul.
         profile = profileData['data'];
       });
     } catch (e) {
@@ -180,6 +181,21 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _showSuccessCardAndNavigate(String message) {
+    setState(() {
+      _successMessage = message;
+      _showSuccessCard = true;
+    });
+
+    Future.delayed(Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _showSuccessCard = false;
+        });
+      }
+    });
+  }
+
   Future<void> sendAbsen(String type) async {
     setState(() => isSubmitting = true);
 
@@ -216,39 +232,26 @@ class _HomePageState extends State<HomePage> {
           address: currentAddress,
         );
         setState(() {
-          _successMessage = "Check-in berhasil!";
-          _showSuccessCard = true;
-          // Perbaikan utama ada di sini: Langsung perbarui stats dengan data dari respons API
           stats = {
             'checkin_time': response.data?.checkInTime,
             'checkout_time': stats?['checkout_time'],
           };
         });
+        _showSuccessCardAndNavigate("Check-in berhasil!");
       } else {
-        // type == "checkout"
         AbsenCheckOutModel response = await AttendanceAPI.checkOut(
           lat: currentPosition!.latitude,
           lng: currentPosition!.longitude,
           address: currentAddress,
         );
         setState(() {
-          _successMessage = "Check-out berhasil!";
-          _showSuccessCard = true;
-          // Perbaikan utama ada di sini: Langsung perbarui stats dengan data dari respons API
           stats = {
             'checkin_time': stats?['checkin_time'],
             'checkout_time': response.data?.checkOutTime,
           };
         });
+        _showSuccessCardAndNavigate("Check-out berhasil!");
       }
-
-      Future.delayed(Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() => _showSuccessCard = false);
-        }
-      });
-      // **Baris ini yang dihapus. Tidak perlu lagi meminta data dari server setelah berhasil mengirim.**
-      // await fetchStats();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -271,108 +274,135 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: Color(0xFFE6E7EE),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
               children: [
                 // HEADER
                 Container(
-                  padding: EdgeInsets.all(25),
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 20,
+                    left: 20,
+                    right: 20,
+                    bottom: 120,
+                  ),
                   decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(30),
+                    ),
                     gradient: LinearGradient(
-                      colors: [Color(0xFF5271FF), Color(0xFF3B57E8)],
+                      colors: [
+                        Color(0xFF6E8BFA),
+                        Color(0xFF5271FF),
+                        Color(0xFF436EFF),
+                      ],
                     ),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF5271FF),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0xFF3B57E8),
-                                  offset: Offset(2, 2),
-                                  blurRadius: 4,
+                          Row(
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  shape: BoxShape.circle,
                                 ),
-                              ],
-                            ),
-                            child:
-                                profile != null &&
-                                    profile!['profile_photo_url'] != null
-                                ? ClipOval(
-                                    child: Image.network(
-                                      profile!['profile_photo_url'],
-                                      fit: BoxFit.cover,
-                                      width: 60,
-                                      height: 60,
+                                child:
+                                    profile != null &&
+                                        profile!['profile_photo_url'] != null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          profile!['profile_photo_url'],
+                                          fit: BoxFit.cover,
+                                          width: 60,
+                                          height: 60,
+                                        ),
+                                      )
+                                    : Icon(Icons.person, color: Colors.white),
+                              ),
+                              SizedBox(width: 11),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isLoading
+                                        ? "Memuat data..."
+                                        : "Selamat ${_greeting()}, $userName!",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'Poppins',
                                     ),
-                                  )
-                                : Icon(Icons.person, color: Colors.white),
-                          ),
-                          SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isLoading
-                                      ? "Memuat data..."
-                                      : "Selamat ${_greeting()}, $userName!",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
                                   ),
-                                ),
-                                Text(
-                                  profile?['training_title'] ?? '',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
+                                  Text(
+                                    profile?['training_title'] ?? '-',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
-                          Icon(Icons.notifications, color: Colors.white),
+                          Icon(
+                            Icons.notifications,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ],
                       ),
-                      SizedBox(height: 25),
+                      SizedBox(height: 15),
                       Text(
                         jam,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 48,
-                          fontWeight: FontWeight.w300,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Poppins',
                         ),
                       ),
-                      Text(tanggal, style: TextStyle(color: Colors.white70)),
+                      Text(
+                        tanggal,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Expanded(
+                // CONTENT
+                Transform.translate(
+                  offset: Offset(0, -80), // Mengangkat konten ke atas
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     child: isLoading
-                        ? Center(child: CircularProgressIndicator())
-                        : ListView(
+                        ? _buildShimmerLoading()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // MAP CARD
                               Card(
-                                elevation: 3,
+                                elevation: 8,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: Container(
-                                  height: 200,
+                                child: SizedBox(
+                                  height: 190,
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(20),
                                     child: GoogleMap(
                                       initialCameraPosition: CameraPosition(
                                         target: currentPosition != null
@@ -416,155 +446,293 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 20),
-                              // LOCATION CARD
-                              Card(
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: ListTile(
-                                  leading: Icon(
-                                    Icons.location_on,
-                                    color: Colors.blue,
-                                  ),
-                                  title: Text(
-                                    "Lokasi: ${currentAddress.isNotEmpty ? currentAddress : '-'}",
-                                  ),
-                                  subtitle: Text(
-                                    "Jarak ke kantor: ${distanceToOffice != null ? distanceToOffice!.toStringAsFixed(1) : '-'} meter",
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20),
+                              SizedBox(height: 10),
+                              // LOKASI CARD
+                              _buildLocationCard(),
+                              SizedBox(height: 10),
                               // ABSENCE CARD
-                              Card(
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text(
-                                        "Absensi Hari Ini",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      SizedBox(height: 10),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Column(
-                                            children: [
-                                              Text("Check-in"),
-                                              SizedBox(height: 5),
-                                              Text(
-                                                stats?['checkin_time'] ?? "-",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Column(
-                                            children: [
-                                              Text("Check-out"),
-                                              SizedBox(height: 5),
-                                              Text(
-                                                stats?['checkout_time'] ?? "-",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 20),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: hasCheckedIn
-                                                    ? Colors.grey
-                                                    : Colors.green,
-                                              ),
-                                              onPressed:
-                                                  isSubmitting || hasCheckedIn
-                                                  ? null
-                                                  : () => sendAbsen("checkin"),
-                                              child: Text("Check-in"),
-                                            ),
-                                          ),
-                                          SizedBox(width: 10),
-                                          Expanded(
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    !hasCheckedIn ||
-                                                        hasCheckedOut
-                                                    ? Colors.grey
-                                                    : Colors.red,
-                                              ),
-                                              onPressed:
-                                                  isSubmitting ||
-                                                      !hasCheckedIn ||
-                                                      hasCheckedOut
-                                                  ? null
-                                                  : () => sendAbsen("checkout"),
-                                              child: Text("Check-out"),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20),
+                              _buildAbsenceCard(hasCheckedIn, hasCheckedOut),
+                              SizedBox(height: 10),
                               // WARNING CARD
                               if (distanceToOffice != null &&
                                   distanceToOffice! > 100)
-                                Card(
-                                  color: Colors.red.shade100,
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: ListTile(
-                                    leading: Icon(
-                                      Icons.warning,
-                                      color: Colors.red,
-                                    ),
-                                    title: Text(
-                                      "Anda berada di luar jangkauan kantor (>${distanceToOffice!.toStringAsFixed(0)}m)",
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ),
+                                _buildWarningCard(),
+                              SizedBox(height: 20),
                             ],
                           ),
                   ),
                 ),
               ],
             ),
-            // SUCCESS CARD fade in – fade out
-            if (_showSuccessCard)
-              Center(
-                child: AnimatedOpacity(
-                  opacity: _showSuccessCard ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 500),
-                  child: SuccessCard(message: _successMessage),
+          ),
+          // SUCCESS CARD fade in – fade out
+          if (_showSuccessCard)
+            Center(
+              child: AnimatedOpacity(
+                opacity: _showSuccessCard ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 500),
+                child: SuccessCard(message: _successMessage),
+              ),
+            ),
+          isSubmitting
+              ? Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : SizedBox(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return Column(
+      children: [
+        SizedBox(height: 80),
+        Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            height: 250,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
+        Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+        SizedBox(height: 2),
+        Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            height: 180,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.location_on, color: Color(0xFF436EFF), size: 40),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Lokasi Anda",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF436EFF),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    currentAddress.isNotEmpty ? currentAddress : '-',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Jarak ke kantor: ${distanceToOffice != null ? distanceToOffice!.toStringAsFixed(1) : '-'} meter",
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAbsenceCard(bool hasCheckedIn, bool hasCheckedOut) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              "Absen Karyawan",
+              style: TextStyle(
+                color: Color(0xFF436EFF),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      "Check-in",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      stats?['checkin_time'] ?? "-",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text(
+                      "Check-out",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      stats?['checkout_time'] ?? "-",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: hasCheckedIn
+                          ? Colors.grey[200]
+                          : Color(0xFF4CAF50),
+                      foregroundColor: hasCheckedIn
+                          ? Colors.grey[400]
+                          : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: isSubmitting || hasCheckedIn
+                        ? null
+                        : () => sendAbsen("checkin"),
+                    child: Text(
+                      "Check-in",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: !hasCheckedIn || hasCheckedOut
+                          ? Colors.grey[200]
+                          : Color(0xFFF44336),
+                      foregroundColor: !hasCheckedIn || hasCheckedOut
+                          ? Colors.grey[400]
+                          : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: isSubmitting || !hasCheckedIn || hasCheckedOut
+                        ? null
+                        : () => sendAbsen("checkout"),
+                    child: Text(
+                      "Check-out",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWarningCard() {
+    return Card(
+      color: Colors.red.shade50,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.red.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red, size: 30),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                "Anda berada di luar jangkauan kantor (>${distanceToOffice!.toStringAsFixed(0)}m)",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
                 ),
               ),
+            ),
           ],
         ),
       ),

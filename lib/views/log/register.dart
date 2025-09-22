@@ -257,7 +257,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           child: Text(
                             t.title ?? "",
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontFamily: 'Poppins',
                               fontWeight: FontWeight.bold,
                             ),
