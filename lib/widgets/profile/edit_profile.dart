@@ -1,19 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:myabsen_project/api/profile.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String currentName;
   final String currentEmail;
-  final String? currentPhotoUrl; // Tambahkan ini
 
   const EditProfilePage({
     super.key,
     required this.currentName,
     required this.currentEmail,
-    this.currentPhotoUrl, // Tambahkan ini
   });
 
   @override
@@ -34,7 +31,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
     _emailController = TextEditingController(text: widget.currentEmail);
-    _profilePhotoUrl = widget.currentPhotoUrl; // Inisialisasi dari widget
   }
 
   @override
@@ -42,57 +38,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
-  }
-
-  // Fungsi untuk memanggil Image Picker dan memilih gambar
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImage = File(pickedFile.path);
-      });
-      Navigator.pop(context); // Tutup bottom sheet
-    }
-  }
-
-  // Fungsi untuk mengunggah foto profil ke API
-  Future<void> _updateProfilePhoto() async {
-    if (_pickedImage == null) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final response = await ProfileAPI.updatePhoto(file: _pickedImage!);
-      final newPhotoUrl = response['data']?['profile_photo'];
-
-      if (newPhotoUrl != null) {
-        setState(() {
-          _profilePhotoUrl = newPhotoUrl;
-          _pickedImage = null; // Reset picked image setelah berhasil diunggah
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Foto profil berhasil diperbarui!"),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gagal mengunggah foto: ${e.toString()}"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   // Fungsi untuk mengupdate nama dan email
@@ -109,9 +54,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await ProfileAPI.updateProfile(name: newName, email: newEmail);
 
       // Panggil fungsi unggah foto jika ada gambar yang dipilih
-      if (_pickedImage != null) {
-        await _updateProfilePhoto();
-      }
+      if (_pickedImage != null) {}
 
       // Tampilkan pesan sukses dan kembali ke halaman profil
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,93 +147,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Avatar Section
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: _getProfileImageProvider() == null
-                          ? LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF4A5CF6), Color(0xFF6C7CE7)],
-                            )
-                          : null,
-                      image: _getProfileImageProvider() != null
-                          ? DecorationImage(
-                              image: _getProfileImageProvider()!,
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF4A5CF6).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: _getProfileImageProvider() == null
-                        ? Icon(Icons.person, size: 60, color: Colors.white)
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(
-                                  Icons.photo_library,
-                                  color: Color(0xFF0062DD),
-                                ),
-                                title: const Text("Pilih dari Gallery"),
-                                onTap: () => _pickImage(ImageSource.gallery),
-                              ),
-                              ListTile(
-                                leading: const Icon(
-                                  Icons.camera_alt,
-                                  color: Color(0xFF0062DD),
-                                ),
-                                title: const Text("Ambil Foto"),
-                                onTap: () => _pickImage(ImageSource.camera),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.grey[200]!,
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          size: 18,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             SizedBox(height: 40),
 
             // Form Section
@@ -365,7 +221,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ],
             ),
 
-            SizedBox(height: 24),
+            SizedBox(height: 15),
 
             // Email Field
             Column(
@@ -428,7 +284,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ],
             ),
 
-            SizedBox(height: 40),
+            SizedBox(height: 28),
 
             // Save Button
             Container(

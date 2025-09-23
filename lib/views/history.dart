@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myabsen_project/api/history.dart';
 import 'package:myabsen_project/model/history.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
@@ -49,8 +48,10 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
   }
 
   Future<void> _createAndExportPdf() async {
-    final status = await Permission.storage.request();
-    if (status.isDenied) {
+    // ✅ Request izin sesuai Android 11+
+    var status = await Permission.manageExternalStorage.request();
+
+    if (!status.isGranted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Izin penyimpanan ditolak.")),
@@ -58,66 +59,66 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
       }
       return;
     }
-    if (status.isGranted) {
-      try {
-        final pdf = pw.Document();
-        final headers = ['Tanggal', 'Check-in', 'Check-out'];
 
-        final data = historyData.map((history) {
-          return [
-            formatDate(history.attendanceDate),
-            history.checkInTime ?? '-',
-            history.checkOutTime ?? '-',
-          ];
-        }).toList();
+    try {
+      final pdf = pw.Document();
+      final headers = ['Tanggal', 'Check-in', 'Check-out'];
 
-        pdf.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (pw.Context context) {
-              return pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    'Riwayat Absensi',
-                    style: pw.TextStyle(
-                      fontSize: 20,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
+      final data = historyData.map((history) {
+        return [
+          formatDate(history.attendanceDate),
+          history.checkInTime ?? '-',
+          history.checkOutTime ?? '-',
+        ];
+      }).toList();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Riwayat Absensi',
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
                   ),
-                  pw.SizedBox(height: 20),
-                  pw.Table.fromTextArray(
-                    headers: headers,
-                    data: data,
-                    cellAlignment: pw.Alignment.centerLeft,
-                    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                    border: pw.TableBorder.all(color: PdfColors.black),
-                  ),
-                ],
-              );
-            },
-          ),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Table.fromTextArray(
+                  headers: headers,
+                  data: data,
+                  cellAlignment: pw.Alignment.centerLeft,
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  border: pw.TableBorder.all(color: PdfColors.black),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // ✅ Simpan langsung ke folder Download
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (!downloadsDir.existsSync()) {
+        downloadsDir.createSync(recursive: true);
+      }
+
+      final file = File('${downloadsDir.path}/riwayat_absen.pdf');
+      await file.writeAsBytes(await pdf.save());
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("PDF berhasil disimpan di: ${file.path}")),
         );
-        final downloadsPath = await getApplicationDocumentsDirectory();
-        final file = File('${downloadsPath.path}/riwayat_absen.pdf');
-
-        await file.writeAsBytes(await pdf.save());
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "PDF berhasil disimpan di folder: ${downloadsPath.path}",
-              ),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Gagal menyimpan file: $e")));
-        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal menyimpan file: $e")));
       }
     }
   }

@@ -340,14 +340,16 @@ class _HomePageState extends State<HomePage> {
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                       fontFamily: 'Poppins',
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   Text(
                                     profile?['training_title'] ?? '-',
                                     style: TextStyle(
                                       color: Colors.white70,
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       fontFamily: 'Poppins',
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],

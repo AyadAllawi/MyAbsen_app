@@ -32,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchProfileData() async {
     try {
       final profileData = await ProfileAPI.getProfile();
+      print("🔍 Profile Data: $profileData"); // debug
       setState(() {
         _name = profileData['data']['name'] ?? "Guest";
         _email = profileData['data']['email'] ?? "No email";
@@ -63,22 +64,31 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _uploadImage(File image) async {
     try {
       final response = await ProfileAPI.updatePhoto(file: image);
-      final newPhotoUrl = response['data']?['profile_photo'];
+      print("🔍 Response Update Photo: $response"); // debug
+      final newPhotoUrl =
+          response['data']?['profile_photo_url'] ??
+          response['data']?['profile_photo'];
+
       if (newPhotoUrl != null) {
+        final freshUrl =
+            "$newPhotoUrl?t=${DateTime.now().millisecondsSinceEpoch}"; // FIX: biar gak cache
         setState(() {
-          _profilePhotoUrl = newPhotoUrl;
+          _profilePhotoUrl = freshUrl;
         });
+        print("✅ Updated photoUrl: $_profilePhotoUrl");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Foto profil berhasil diperbarui!")),
+          const SnackBar(content: Text("Foto profil berhasil diperbarui!")),
         );
       }
     } catch (e) {
+      print("❌ Error upload: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal mengunggah foto: ${e.toString()}")),
       );
     }
   }
 
+  // FIX: sekarang bener return NetworkImage
   ImageProvider<Object>? _getProfileImageProvider() {
     if (_profilePhotoUrl != null && _profilePhotoUrl!.isNotEmpty) {
       return NetworkImage(_profilePhotoUrl!);
