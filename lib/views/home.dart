@@ -451,13 +451,13 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               SizedBox(height: 10),
-                              // LOKASI CARD
+                             
                               _buildLocationCard(),
                               SizedBox(height: 10),
-                              // ABSENCE CARD
+                             
                               _buildAbsenceCard(hasCheckedIn, hasCheckedOut),
                               SizedBox(height: 10),
-                              // WARNING CARD
+                           
                               if (distanceToOffice != null &&
                                   distanceToOffice! > 100)
                                 _buildWarningCard(),
@@ -469,7 +469,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          // SUCCESS CARD fade in – fade out
           if (_showSuccessCard)
             Center(
               child: AnimatedOpacity(

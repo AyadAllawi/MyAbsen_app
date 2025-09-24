@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 import 'package:myabsen_project/api/profile.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
 import 'package:myabsen_project/views/log/login.dart';
@@ -50,15 +51,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    // ================================================================
-    //         ⬇️ INI DIA SATU-SATUNYA PENAMBAHAN KODE ⬇️
-    //      Tambahkan parameter untuk kompresi dan ubah ukuran
-    // ================================================================
     final pickedFile = await ImagePicker().pickImage(
       source: source,
       maxWidth: 800,
       maxHeight: 800,
-      imageQuality: 85, // Kualitas gambar (0-100), 85 udah bagus
+      imageQuality: 85,
     );
 
     if (pickedFile != null) {
@@ -73,14 +70,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _uploadImage(File image) async {
     try {
       final response = await ProfileAPI.updatePhoto(file: image);
-      print("🔍 Response Update Photo: $response"); // debug
+      print("🔍 Response Update Photo: $response");
       final newPhotoUrl =
           response['data']?['profile_photo_url'] ??
           response['data']?['profile_photo'];
 
       if (newPhotoUrl != null) {
         final freshUrl =
-            "$newPhotoUrl?t=${DateTime.now().millisecondsSinceEpoch}"; // FIX: biar gak cache
+            "$newPhotoUrl?t=${DateTime.now().millisecondsSinceEpoch}";
         setState(() {
           _profilePhotoUrl = freshUrl;
         });
@@ -97,7 +94,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // FIX: sekarang bener return NetworkImage
   ImageProvider<Object>? _getProfileImageProvider() {
     if (_profilePhotoUrl != null && _profilePhotoUrl!.isNotEmpty) {
       return NetworkImage(_profilePhotoUrl!);
@@ -105,13 +101,78 @@ class _ProfilePageState extends State<ProfilePage> {
     return null;
   }
 
+  Future<void> _showLogoutConfirmationDialog() async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Konfirmasi Logout",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E3A8A),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset('assets/lottie/warning.json', height: 150),
+              const SizedBox(height: 16),
+              const Text(
+                "Apakah Anda yakin ingin keluar dari akun ini?",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Batal"),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Ya, Logout"),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Mengembalikan true
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await PreferenceHandler.removeToken();
+      await PreferenceHandler.logout();
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginAbsen()),
+          (Route<dynamic> route) => false, // Hapus semua rute sebelumnya
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ================================================================
-    //         UI/UX DI BAWAH INI TIDAK DIUBAH SAMA SEKALI
-    // ================================================================
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F1FF), // Latar belakang lebih cerah
+      backgroundColor: const Color(0xFFE8F1FF),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -285,15 +346,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         foregroundColor: Colors.redAccent,
                       ),
-                      onPressed: () async {
-                        await PreferenceHandler.removeToken();
-                        await PreferenceHandler.logout();
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginAbsen(),
-                          ),
-                        );
+
+                      onPressed: () {
+                        _showLogoutConfirmationDialog();
                       },
                       icon: const Icon(Icons.logout, color: Colors.redAccent),
                       label: const Text(
@@ -312,6 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                   ),
+                  const SizedBox(height: 20), // Tambahan padding bawah
                 ],
               ),
             ),

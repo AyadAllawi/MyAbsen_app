@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart'; // 1. PASTIKAN LOTTIE SUDAH DI-IMPORT
 import 'package:myabsen_project/api/profile.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -22,7 +23,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late final TextEditingController _emailController;
   bool _isLoading = false;
 
-  // Variabel baru untuk foto profil
   File? _pickedImage;
   String? _profilePhotoUrl;
 
@@ -40,6 +40,81 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
+  Future<void> _showSaveConfirmationDialog() async {
+    // Cek dulu apakah ada perubahan
+    if (_nameController.text.trim() == widget.currentName &&
+        _emailController.text.trim() == widget.currentEmail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tidak ada perubahan untuk disimpan.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Simpan Perubahan?",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E3A8A),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset('assets/lottie/success.json', height: 150),
+              const SizedBox(height: 16),
+              const Text(
+                "Apakah Anda yakin ingin menyimpan perubahan ini?",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Batal"),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4A5CF6),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Ya, Simpan"),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await _updateProfile();
+    }
+  }
+
   // Fungsi untuk mengupdate nama dan email
   Future<void> _updateProfile() async {
     setState(() {
@@ -50,50 +125,47 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final newEmail = _emailController.text.trim();
 
     try {
-      // Panggil API untuk mengupdate nama dan email
       await ProfileAPI.updateProfile(name: newName, email: newEmail);
 
-      // Panggil fungsi unggah foto jika ada gambar yang dipilih
-      if (_pickedImage != null) {}
+      if (_pickedImage != null) {
+        // Logika unggah foto (jika ada)
+      }
 
-      // Tampilkan pesan sukses dan kembali ke halaman profil
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Profil berhasil diperbarui.'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profil berhasil diperbarui.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        ),
-      );
-
-      // Kembali ke halaman sebelumnya dan kirim data yang diperbarui
-      Navigator.pop(context, {
-        'name': newName,
-        'email': newEmail,
-        'photoUrl': _profilePhotoUrl, // Kirim juga URL foto yang baru
-      });
+        );
+        Navigator.pop(context, {'name': newName, 'email': newEmail});
+      }
     } catch (e) {
-      // Tangani error jika gagal
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gagal memperbarui profil: ${e.toString()}"),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal memperbarui profil: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        ),
-      );
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  // Helper function untuk mendapatkan ImageProvider yang benar
   ImageProvider<Object>? _getProfileImageProvider() {
     if (_pickedImage != null) {
       return FileImage(_pickedImage!);
@@ -148,8 +220,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 40),
-
-            // Form Section
             Text(
               'Informasi Personal',
               style: TextStyle(
@@ -158,10 +228,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 color: Colors.black87,
               ),
             ),
-
             SizedBox(height: 20),
-
-            // Name Field
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -220,73 +287,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
               ],
             ),
-
-            SizedBox(height: 15),
-
-            // Email Field
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      prefixIcon: Container(
-                        margin: EdgeInsets.all(12),
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF4A5CF6).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.email_outlined,
-                          color: Color(0xFF4A5CF6),
-                          size: 20,
-                        ),
-                      ),
-                      hintText: 'Masukkan email',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                ),
-              ],
-            ),
-
             SizedBox(height: 28),
-
-            // Save Button
             Container(
               width: double.infinity,
               height: 56,
@@ -306,7 +307,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _updateProfile,
+                onPressed: _isLoading ? null : _showSaveConfirmationDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -344,7 +345,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
               ),
             ),
-
             SizedBox(height: 20),
           ],
         ),

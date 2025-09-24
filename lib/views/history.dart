@@ -69,7 +69,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
       print('TIPE ERROR: ${e.runtimeType}'); // Mencetak tipe errornya
       print('PESAN ERROR: $e'); // Mencetak pesan errornya
       print(
-        'JEJAK STACK (LOKASI ERROR): $stackTrace',
+        'JEJAK STACK (LOKASI ERRORR): $stackTrace',
       ); // Mencetak jejak errornya
 
       if (mounted) {
