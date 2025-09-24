@@ -1,8 +1,8 @@
 import 'dart:convert';
 
+import 'package:MyAbsen/widgets/reset_password.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:myabsen_project/widgets/reset_password.dart';
 
 // Model untuk respons forgot password
 class ForgotPasswordModel {

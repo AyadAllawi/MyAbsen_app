@@ -1,9 +1,10 @@
 import 'dart:io';
 
+import 'package:MyAbsen/api/history.dart';
+import 'package:MyAbsen/model/get_list_training_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myabsen_project/api/history.dart'; // Pastikan ini import ke file API-mu
-import 'package:myabsen_project/model/history.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
@@ -50,7 +51,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
   // =======================================================================
 
   Future<void> _handleDeleteAbsen(int idAbsen) async {
-    // <-- KUNCI PERBAIKAN: PASTIKAN INI 'int'
     try {
       await HistoryService.deleteAbsen(idAbsen: idAbsen);
       setState(() {
@@ -66,16 +66,13 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
       }
     } catch (e, stackTrace) {
       print('⛔️ TERTANGKAP ERROR SAAT MENGHAPUS!');
-      print('TIPE ERROR: ${e.runtimeType}'); // Mencetak tipe errornya
-      print('PESAN ERROR: $e'); // Mencetak pesan errornya
-      print(
-        'JEJAK STACK (LOKASI ERRORR): $stackTrace',
-      ); // Mencetak jejak errornya
+      print('TIPE ERROR: ${e.runtimeType}');
+      print('PESAN ERROR: $e');
+      print('JEJAK STACK (LOKASI ERRORR): $stackTrace');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            // Kita tampilkan juga tipe errornya di notifikasi
             content: Text("Gagal: [${e.runtimeType}] ${e.toString()}"),
             backgroundColor: Colors.red,
           ),
@@ -85,14 +82,21 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
   }
 
   void _showDeleteConfirmationDialog(int idAbsen) {
-    // <-- KUNCI PERBAIKAN: PASTIKAN INI 'int'
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Konfirmasi Hapus"),
-          content: const Text(
-            "Yakin mau hapus data absen ini? Tindakan ini tidak bisa dibatalkan.",
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset('assets/lottie/warning.json', height: 150),
+              const SizedBox(height: 16),
+              const Text(
+                "Yakin mau hapus data absen ini? Tindakan ini tidak bisa dibatalkan.",
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -114,12 +118,8 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
       },
     );
   }
-  // =======================================================================
-  // =================== AKHIR DARI PENAMBAHAN FUNGSI ======================
-  // =======================================================================
 
   Future<void> _createAndExportPdf() async {
-    // Kode PDF lu yang sudah ada (tidak diubah)
     var status = await Permission.manageExternalStorage.request();
 
     if (!status.isGranted) {
@@ -139,7 +139,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
         return [
           formatDate(history.attendanceDate),
           history.checkInTime ?? '-',
-          history.checkOutTime ?? '-',
+          history.checkOutTime ?? '-', // ✅ fix typo disini
         ];
       }).toList();
 
@@ -260,7 +260,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                     onRefresh: _fetchHistoryData,
                     child: historyData.isEmpty
                         ? ListView(
-                            // dibungkus ListView biar bisa ditarik (refresh)
                             children: const [
                               SizedBox(height: 50),
                               Center(child: Text("Belum ada riwayat absensi")),
@@ -271,9 +270,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                             itemCount: historyData.length,
                             itemBuilder: (context, index) {
                               final item = historyData[index];
-                              // =================================================================
-                              // ================= MODIFIKASI BAGIAN CARD ========================
-                              // =================================================================
                               return Card(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -336,7 +332,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(
-                                            // <-- TAMBAHKAN INI
                                             child: Text(
                                               "Masuk: ${item.checkInTime ?? '-'} ",
                                               style: const TextStyle(
@@ -349,7 +344,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                         ],
                                       ),
                                       const SizedBox(height: 4),
-
                                       Row(
                                         children: [
                                           const Icon(

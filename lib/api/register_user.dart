@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:MyAbsen/api/endpoint/endpoint.dart';
+import 'package:MyAbsen/model/get_bacth.dart';
+import 'package:MyAbsen/model/get_list_training.dart';
+import 'package:MyAbsen/model/get_profile.dart';
+import 'package:MyAbsen/model/login.dart';
+import 'package:MyAbsen/model/put_profile.dart';
+import 'package:MyAbsen/model/register.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
 import 'package:http/http.dart' as http;
-import 'package:myabsen_project/api/endpoint/endpoint.dart';
-import 'package:myabsen_project/model/get_bacth.dart';
-import 'package:myabsen_project/model/get_list_training.dart';
-import 'package:myabsen_project/model/get_profile.dart';
-import 'package:myabsen_project/model/login.dart';
-import 'package:myabsen_project/model/put_profile.dart';
-import 'package:myabsen_project/model/register.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
+
 
 class AuthenticationAPI {
   // Helper: safe json decode -> returns decoded object or null

@@ -1,12 +1,12 @@
+import 'package:MyAbsen/views/home.dart';
+import 'package:MyAbsen/views/log/login.dart';
+import 'package:MyAbsen/views/log/logreg.dart';
+import 'package:MyAbsen/views/log/register.dart';
+import 'package:MyAbsen/views/onboarding/onboarding.dart';
+import 'package:MyAbsen/views/splashscreen.dart';
+import 'package:MyAbsen/widgets/navbar/bottom.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:myabsen_project/views/home.dart';
-import 'package:myabsen_project/views/log/login.dart';
-import 'package:myabsen_project/views/log/logreg.dart';
-import 'package:myabsen_project/views/log/register.dart';
-import 'package:myabsen_project/views/onboarding/onboarding.dart';
-import 'package:myabsen_project/views/splashscreen.dart';
-import 'package:myabsen_project/widgets/navbar/bottom.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

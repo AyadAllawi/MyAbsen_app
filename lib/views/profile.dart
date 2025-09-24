@@ -1,13 +1,13 @@
 import 'dart:io';
 
+import 'package:MyAbsen/api/profile.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
+import 'package:MyAbsen/views/log/login.dart';
+import 'package:MyAbsen/widgets/profile/about.dart';
+import 'package:MyAbsen/widgets/profile/edit_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:myabsen_project/api/profile.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
-import 'package:myabsen_project/views/log/login.dart';
-import 'package:myabsen_project/widgets/profile/about.dart';
-import 'package:myabsen_project/widgets/profile/edit_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

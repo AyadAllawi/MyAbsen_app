@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:MyAbsen/api/endpoint/endpoint.dart';
+import 'package:MyAbsen/model/delete_absen.dart';
+import 'package:MyAbsen/model/history.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
 import 'package:http/http.dart' as http;
-import 'package:myabsen_project/api/endpoint/endpoint.dart';
-import 'package:myabsen_project/model/delete_absen.dart';
-import 'package:myabsen_project/model/history.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
 
 class HistoryService {
   static Future<GetHistoryModel> getHistory() async {

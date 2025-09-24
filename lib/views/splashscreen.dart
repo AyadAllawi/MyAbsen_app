@@ -1,8 +1,8 @@
+import 'package:MyAbsen/extension/navigation.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
+import 'package:MyAbsen/views/onboarding/onboarding.dart';
+import 'package:MyAbsen/widgets/navbar/bottom.dart';
 import 'package:flutter/material.dart';
-import 'package:myabsen_project/extension/navigation.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
-import 'package:myabsen_project/views/onboarding/onboarding.dart';
-import 'package:myabsen_project/widgets/navbar/bottom.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

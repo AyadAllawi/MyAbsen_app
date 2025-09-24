@@ -1,9 +1,9 @@
+import 'package:MyAbsen/api/profile.dart';
+import 'package:MyAbsen/views/history.dart';
+import 'package:MyAbsen/views/home.dart';
+import 'package:MyAbsen/views/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:myabsen_project/api/profile.dart';
-import 'package:myabsen_project/views/history.dart';
-import 'package:myabsen_project/views/home.dart';
-import 'package:myabsen_project/views/profile.dart';
 
 class BottomPage extends StatelessWidget {
   BottomPage({super.key});
@@ -40,13 +40,9 @@ class BottomPage extends StatelessWidget {
   ];
 }
 
-// ================================================================
-//         ⬇️ INI ADALAH 'OTAK' UTAMA APLIKASI LU ⬇️
-// ================================================================
 class NavigationController extends GetxController {
   final RxInt selectedIndex = 0.obs;
 
-  // Variabel penampung data profil, dibungkus Rx agar reaktif
   final Rxn<String> userName = Rxn<String>();
   final Rxn<String> userEmail = Rxn<String>();
   final Rxn<String> profilePhotoUrl = Rxn<String>();

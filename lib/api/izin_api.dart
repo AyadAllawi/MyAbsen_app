@@ -1,9 +1,10 @@
 // Izin
 import 'dart:convert';
 
+import 'package:MyAbsen/api/endpoint/endpoint.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
 import 'package:http/http.dart' as http;
-import 'package:myabsen_project/api/endpoint/endpoint.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
+
 
 class IzinAPI {
   static Future<void> submitIzin({

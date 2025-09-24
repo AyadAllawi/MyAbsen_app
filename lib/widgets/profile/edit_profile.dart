@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:MyAbsen/api/profile.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart'; // 1. PASTIKAN LOTTIE SUDAH DI-IMPORT
-import 'package:myabsen_project/api/profile.dart';
+import 'package:lottie/lottie.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String currentName;
