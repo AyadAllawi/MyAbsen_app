@@ -6,7 +6,7 @@ import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 import 'package:myabsen_project/views/splashscreen.dart';
-import 'package:myabsen_project/widgets/autochek.dart';
+import 'package:myabsen_project/widgets/navbar/bottom.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color.fromARGB(255, 3, 3, 3),
         ),
       ),
-      initialRoute: '/',
+      initialRoute: SplashScreen.id,
       routes: {
         '/splash_screen': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingPage(),
@@ -38,8 +38,9 @@ class MyApp extends StatelessWidget {
         '/logreg': (context) => const Logreg(),
         '/register_futsal': (context) => const RegisterPage(),
         '/home': (context) => HomePage(),
+        '/bot': (context) => BottomPage(),
       },
-      home: AuthCheckPage(),
+      // home: SplashScreen(),
     );
   }
 }

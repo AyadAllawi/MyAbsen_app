@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:myabsen_project/extension/navigation.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
-import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
+import 'package:myabsen_project/widgets/navbar/bottom.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,24 +17,19 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    isLogin();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkLogin();
+    });
   }
 
-  void isLogin() async {
-    bool? isLogin = await PreferenceHandler.getLoginStatus();
-
-    Future.delayed(Duration(seconds: 3)).then((value) async {
-      print(isLogin);
+  void checkLogin() async {
+    final isLogin = await PreferenceHandler.getLogin();
+    Future.delayed(Duration(seconds: 4)).then((_) {
+      if (!mounted) return;
       if (isLogin == true) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => Logreg()),
-        );
+        context.pushReplacementNamed(BottomPage.id);
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingPage()),
-        );
+        context.pushNamed(OnboardingPage.id);
       }
     });
   }

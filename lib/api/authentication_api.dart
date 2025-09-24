@@ -82,7 +82,7 @@ class AuthenticationAPI {
   }
 
   /// LOGIN USER
-  static Future<LoginModel> loginUser({
+  static Future<RegisterUserModel> loginUser({
     required String email,
     required String password,
   }) async {
@@ -135,7 +135,7 @@ class AuthenticationAPI {
         await PreferenceHandler.saveToken(token.toString());
       }
 
-      return LoginModel.fromJson(body);
+      return RegisterUserModel.fromJson(body);
     } else {
       final msg = _extractErrorMessage(body, "Login gagal");
       throw Exception(msg);

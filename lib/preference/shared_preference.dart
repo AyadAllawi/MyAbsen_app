@@ -8,7 +8,6 @@ class PreferenceHandler {
   static const String batchKey = "batch";
   static const String loginKey = "login";
 
-  /// Simpan semua data user sekaligus
   static Future<void> saveUserData({
     required String token,
     required int userId,
@@ -85,5 +84,17 @@ class PreferenceHandler {
     await prefs.remove(userNameKey);
     await prefs.remove(batchKey);
     await prefs.setBool(loginKey, false);
+  }
+
+  //Login
+  static Future<void> saveLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(loginKey, true);
+  }
+
+  static Future<bool?> getLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.getBool(loginKey);
+    return prefs.getBool(loginKey);
   }
 }

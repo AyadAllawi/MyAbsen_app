@@ -9,7 +9,6 @@ class BottomPage extends StatelessWidget {
   BottomPage({super.key});
   static const id = "/bot";
 
-  // PENTING: Controller diinisialisasi di sini, HANYA SEKALI.
   final NavigationController controller = Get.put(NavigationController());
 
   @override

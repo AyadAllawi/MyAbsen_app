@@ -87,7 +87,7 @@ class AuthenticationAPI {
 
   // NOTE: pastikan model class di model/login.dart bernama LoginModel.
   // Kalau di project lo namanya LoginAbsen, ubah signature/return sesuai model asli.
-  static Future<LoginModel> loginUser({
+  static Future<RegisterUserModel> loginUser({
     required String email,
     required String password,
   }) async {
@@ -113,7 +113,7 @@ class AuthenticationAPI {
         if (body == null) {
           throw Exception("Login success but response body invalid.");
         }
-        return LoginModel.fromJson(body);
+        return RegisterUserModel.fromJson(body);
       } else {
         final error = _safeDecode(response.body) ?? {};
         throw Exception(

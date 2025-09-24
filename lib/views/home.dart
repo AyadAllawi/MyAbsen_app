@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:myabsen_project/api/attandance.dart';
+import 'package:myabsen_project/api/profile.dart';
 import 'package:myabsen_project/contans/office_location.dart';
-import 'package:myabsen_project/widgets/navbar/bottom.dart';
+import 'package:myabsen_project/model/absen_chek_in.dart';
+import 'package:myabsen_project/model/absen_chek_out.dart';
+import 'package:myabsen_project/widgets/succes.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,12 +21,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final NavigationController navController = Get.find<NavigationController>();
   Map<String, dynamic>? stats;
-  bool isLoadingStats = true;
+  Map<String, dynamic>? profile;
+  bool isLoading = true;
   bool isSubmitting = false;
-  final bool _showSuccessCard = false;
-  final String _successMessage = "";
+  bool _showSuccessCard = false;
+  String _successMessage = "";
 
   late String jam;
   late String tanggal;
@@ -40,15 +42,23 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _updateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
-    _initNonProfileData();
+    _timer = Timer.periodic(Duration(seconds: 1), (_) => _updateTime());
+    _initAll();
   }
 
-  Future<void> _initNonProfileData() async {
+  Future<void> _initAll() async {
     try {
-      await Future.wait([fetchStats(), _determinePositionAndAddress()]);
+      await Future.wait([
+        fetchProfile(),
+        fetchStats(),
+        _determinePositionAndAddress(),
+      ]);
     } catch (e) {
-      print("_initNonProfileData error: $e");
+      print("_initAll error: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -67,6 +77,10 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  String get userName {
+    return profile?['name'] ?? "User";
+  }
+
   String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return "Pagi";
@@ -76,82 +90,175 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchStats() async {
-    if (!mounted) return;
-    setState(() => isLoadingStats = true);
     try {
       final statsData = await AttendanceAPI.getStats();
-      if (mounted) {
-        setState(() {
-          stats = statsData;
-        });
-      }
+      setState(() {
+        stats = statsData;
+      });
     } catch (e) {
       print("fetchStats error: $e");
-    } finally {
-      if (mounted) {
-        setState(() => isLoadingStats = false);
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengambil statistik")));
+    }
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      final profileData = await ProfileAPI.getProfile();
+      setState(() {
+        profile = profileData['data'];
+      });
+    } catch (e) {
+      print("fetchProfile error: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengambil profil")));
     }
   }
 
   Future<void> _determinePositionAndAddress() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return;
-
+      if (!serviceEnabled) {
+        return;
+      }
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return;
+        if (permission == LocationPermission.denied) {
+          return;
+        }
       }
-      if (permission == LocationPermission.deniedForever) return;
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
 
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      if (!mounted) return;
-
       setState(() {
         currentPosition = pos;
-        distanceToOffice = Geolocator.distanceBetween(
-          pos.latitude,
-          pos.longitude,
-          kantorLocation.latitude,
-          kantorLocation.longitude,
-        );
       });
 
-      mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 16.0),
-      );
-
-      final placemarks = await placemarkFromCoordinates(
-        pos.latitude,
-        pos.longitude,
-      );
-      if (placemarks.isNotEmpty) {
-        final p = placemarks.first;
-        setState(() {
-          currentAddress = [
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          pos.latitude,
+          pos.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          final parts = [
             p.name,
             p.street,
             p.subLocality,
             p.locality,
             p.administrativeArea,
           ].where((s) => s != null && s.isNotEmpty).join(", ");
-        });
+          currentAddress = parts;
+        } else {
+          currentAddress = "${pos.latitude}, ${pos.longitude}";
+        }
+      } catch (e) {
+        currentAddress = "${pos.latitude}, ${pos.longitude}";
       }
+
+      final meter = Geolocator.distanceBetween(
+        pos.latitude,
+        pos.longitude,
+        kantorLocation.latitude,
+        kantorLocation.longitude,
+      );
+      setState(() {
+        distanceToOffice = meter;
+      });
+
+      mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 16.0),
+      );
     } catch (e) {
       print("_determinePositionAndAddress error: $e");
     }
   }
 
-  Future<void> sendAbsen(String type) async {
-    // Implementasi fungsi ini...
+  void _showSuccessCardAndNavigate(String message) {
+    setState(() {
+      _successMessage = message;
+      _showSuccessCard = true;
+    });
+
+    Future.delayed(Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _showSuccessCard = false;
+        });
+      }
+    });
   }
 
-  void _showSuccessCardAndNavigate(String message) {
-    // Implementasi fungsi ini...
+  Future<void> sendAbsen(String type) async {
+    setState(() => isSubmitting = true);
+
+    if (currentPosition == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lokasi belum tersedia, coba ulangi.")),
+      );
+      setState(() => isSubmitting = false);
+      return;
+    }
+
+    final dist =
+        distanceToOffice ??
+        Geolocator.distanceBetween(
+          currentPosition!.latitude,
+          currentPosition!.longitude,
+          kantorLocation.latitude,
+          kantorLocation.longitude,
+        );
+
+    if (dist > 20) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Anda berada di luar jangkauan 20m kantor.")),
+      );
+      setState(() => isSubmitting = false);
+      return;
+    }
+
+    try {
+      if (type == "checkin") {
+        AbsenCheckInModel response = await AttendanceAPI.checkIn(
+          lat: currentPosition!.latitude,
+          lng: currentPosition!.longitude,
+          address: currentAddress,
+        );
+        setState(() {
+          stats = {
+            'checkin_time': response.data?.checkInTime,
+            'checkout_time': stats?['checkout_time'],
+          };
+        });
+        _showSuccessCardAndNavigate("Check-in berhasil!");
+      } else {
+        AbsenCheckOutModel response = await AttendanceAPI.checkOut(
+          lat: currentPosition!.latitude,
+          lng: currentPosition!.longitude,
+          address: currentAddress,
+        );
+        setState(() {
+          stats = {
+            'checkin_time': stats?['checkin_time'],
+            'checkout_time': response.data?.checkOutTime,
+          };
+        });
+        _showSuccessCardAndNavigate("Check-out berhasil!");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal $type: ${e.toString()}")));
+    } finally {
+      setState(() => isSubmitting = false);
+    }
   }
 
   @override
@@ -166,12 +273,13 @@ class _HomePageState extends State<HomePage> {
         (stats?['checkout_time'] as String).isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE6E7EE),
+      backgroundColor: Color(0xFFE6E7EE),
       body: Stack(
         children: [
           SingleChildScrollView(
             child: Column(
               children: [
+                // HEADER
                 Container(
                   padding: EdgeInsets.only(
                     top: MediaQuery.of(context).padding.top + 20,
@@ -179,7 +287,7 @@ class _HomePageState extends State<HomePage> {
                     right: 20,
                     bottom: 120,
                   ),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.vertical(
                       bottom: Radius.circular(30),
                     ),
@@ -199,71 +307,64 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Row(
                             children: [
-                              Obx(() {
-                                final photoUrl =
-                                    navController.profilePhotoUrl.value;
-                                return CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.white.withOpacity(
-                                    0.3,
-                                  ),
-                                  backgroundImage:
-                                      (photoUrl != null && photoUrl.isNotEmpty)
-                                      ? NetworkImage(photoUrl)
-                                      : null,
-                                  child: (photoUrl == null || photoUrl.isEmpty)
-                                      ? const Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: 30,
-                                        )
-                                      : null,
-                                );
-                              }),
-                              const SizedBox(width: 11),
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.3),
+                                  shape: BoxShape.circle,
+                                ),
+                                child:
+                                    profile != null &&
+                                        profile!['profile_photo_url'] != null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          profile!['profile_photo_url'],
+                                          fit: BoxFit.cover,
+                                          width: 60,
+                                          height: 60,
+                                        ),
+                                      )
+                                    : Icon(Icons.person, color: Colors.white),
+                              ),
+                              SizedBox(width: 11),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Obx(
-                                    () => Text(
-                                      navController.isProfileLoading.value
-                                          ? "Memuat data..."
-                                          : "Selamat ${_greeting()}, ${navController.userName.value ?? 'User'}!",
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                  Text(
+                                    isLoading
+                                        ? "Memuat data..."
+                                        : "Selamat ${_greeting()}, $userName!",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'Poppins',
                                     ),
                                   ),
-                                  Obx(
-                                    () => Text(
-                                      // Asumsi training title ada di controller
-                                      navController.userTrainingTitle.value ??
-                                          '-',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 10,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                  Text(
+                                    profile?['training_title'] ?? '-',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
                                     ),
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                          const Icon(
+                          Icon(
                             Icons.notifications,
                             color: Colors.white,
                             size: 28,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 15),
+                      SizedBox(height: 15),
                       Text(
                         jam,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 48,
                           fontWeight: FontWeight.w500,
@@ -272,7 +373,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Text(
                         tanggal,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontFamily: 'Poppins',
                           fontSize: 12,
@@ -282,19 +383,17 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                // ================================================================
-                //         ⬇️ INI DIA CONTENT-NYA YANG KEMARIN HILANG ⬇️
-                // ================================================================
+                // CONTENT
                 Transform.translate(
-                  offset: const Offset(0, -80),
+                  offset: Offset(0, -80), // Mengangkat konten ke atas
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child:
-                        (isLoadingStats || navController.isProfileLoading.value)
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: isLoading
                         ? _buildShimmerLoading()
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // MAP CARD
                               Card(
                                 elevation: 8,
                                 shape: RoundedRectangleBorder(
@@ -320,15 +419,23 @@ class _HomePageState extends State<HomePage> {
                                       markers: {
                                         if (currentPosition != null)
                                           Marker(
-                                            markerId: const MarkerId("me"),
+                                            markerId: MarkerId("me"),
                                             position: LatLng(
                                               currentPosition!.latitude,
                                               currentPosition!.longitude,
                                             ),
+                                            infoWindow: InfoWindow(
+                                              title: "Lokasi Anda",
+                                              snippet: currentAddress,
+                                            ),
                                           ),
                                         Marker(
-                                          markerId: const MarkerId("kantor"),
+                                          markerId: MarkerId("kantor"),
                                           position: kantorLocation,
+                                          infoWindow: InfoWindow(
+                                            title: "Kantor",
+                                            snippet: "Titik lokasi kantor",
+                                          ),
                                           icon:
                                               BitmapDescriptor.defaultMarkerWithHue(
                                                 BitmapDescriptor.hueBlue,
@@ -339,15 +446,18 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
+                              // LOKASI CARD
                               _buildLocationCard(),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
+                              // ABSENCE CARD
                               _buildAbsenceCard(hasCheckedIn, hasCheckedOut),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
+                              // WARNING CARD
                               if (distanceToOffice != null &&
                                   distanceToOffice! > 100)
                                 _buildWarningCard(),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                             ],
                           ),
                   ),
@@ -355,42 +465,54 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+          // SUCCESS CARD fade in – fade out
+          if (_showSuccessCard)
+            Center(
+              child: AnimatedOpacity(
+                opacity: _showSuccessCard ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 500),
+                child: SuccessCard(message: _successMessage),
+              ),
+            ),
+          isSubmitting
+              ? Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : SizedBox(),
         ],
       ),
     );
   }
 
-  // ================================================================
-  //         ⬇️ FUNGSI BUILDER-NYA GUA KEMBALIKAN LAGI ⬇️
-  // ================================================================
-
   Widget _buildShimmerLoading() {
     return Column(
       children: [
+        SizedBox(height: 80),
         Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
           highlightColor: Colors.grey[100]!,
           child: Container(
-            height: 190,
+            height: 250,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 20),
         Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
           highlightColor: Colors.grey[100]!,
           child: Container(
-            height: 120,
+            height: 80,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 2),
         Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
           highlightColor: Colors.grey[100]!,
@@ -414,13 +536,13 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(Icons.location_on, color: Color(0xFF436EFF), size: 40),
-            const SizedBox(width: 16),
+            Icon(Icons.location_on, color: Color(0xFF436EFF), size: 40),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     "Lokasi Anda",
                     style: TextStyle(
                       fontFamily: 'Poppins',
@@ -429,19 +551,19 @@ class _HomePageState extends State<HomePage> {
                       color: Color(0xFF436EFF),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     currentAddress.isNotEmpty ? currentAddress : '-',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
                       color: Colors.black54,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     "Jarak ke kantor: ${distanceToOffice != null ? distanceToOffice!.toStringAsFixed(1) : '-'} meter",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
                       color: Colors.black54,
@@ -464,7 +586,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
+            Text(
               "Absen Karyawan",
               style: TextStyle(
                 color: Color(0xFF436EFF),
@@ -473,13 +595,13 @@ class _HomePageState extends State<HomePage> {
                 fontFamily: 'Poppins',
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Column(
                   children: [
-                    const Text(
+                    Text(
                       "Check-in",
                       style: TextStyle(
                         color: Colors.black54,
@@ -487,10 +609,10 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
                     Text(
                       stats?['checkin_time'] ?? "-",
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.black87,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
@@ -501,7 +623,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 Column(
                   children: [
-                    const Text(
+                    Text(
                       "Check-out",
                       style: TextStyle(
                         color: Colors.black54,
@@ -509,10 +631,10 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
                     Text(
                       stats?['checkout_time'] ?? "-",
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.black87,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
@@ -523,7 +645,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -531,19 +653,19 @@ class _HomePageState extends State<HomePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: hasCheckedIn
                           ? Colors.grey[200]
-                          : const Color(0xFF4CAF50),
+                          : Color(0xFF4CAF50),
                       foregroundColor: hasCheckedIn
                           ? Colors.grey[400]
                           : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: isSubmitting || hasCheckedIn
                         ? null
                         : () => sendAbsen("checkin"),
-                    child: const Text(
+                    child: Text(
                       "Check-in",
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -552,25 +674,25 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: !hasCheckedIn || hasCheckedOut
                           ? Colors.grey[200]
-                          : const Color(0xFFF44336),
+                          : Color(0xFFF44336),
                       foregroundColor: !hasCheckedIn || hasCheckedOut
                           ? Colors.grey[400]
                           : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: isSubmitting || !hasCheckedIn || hasCheckedOut
                         ? null
                         : () => sendAbsen("checkout"),
-                    child: const Text(
+                    child: Text(
                       "Check-out",
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -580,12 +702,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ],
-            ),
-            Center(
-              child: Text(
-                "© 2025 Ayad Allawi",
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
             ),
           ],
         ),
@@ -605,12 +721,12 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(Icons.warning, color: Colors.red, size: 30),
-            const SizedBox(width: 16),
+            Icon(Icons.warning, color: Colors.red, size: 30),
+            SizedBox(width: 16),
             Expanded(
               child: Text(
                 "Anda berada di luar jangkauan kantor (>${distanceToOffice!.toStringAsFixed(0)}m)",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.red,
                   fontFamily: 'Poppins',
                   fontSize: 13,

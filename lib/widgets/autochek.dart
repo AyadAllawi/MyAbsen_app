@@ -21,13 +21,11 @@ class _AuthCheckPageState extends State<AuthCheckPage> {
     final token = await PreferenceHandler.getToken();
     if (mounted) {
       if (token != null && token.isNotEmpty) {
-        // Jika token ada, langsung navigasi ke halaman utama
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => BottomPage()),
         );
       } else {
-        // Jika token tidak ada, navigasi ke halaman login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginAbsen()),

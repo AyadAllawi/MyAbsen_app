@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:myabsen_project/api/authentication_api.dart';
+import 'package:myabsen_project/extension/navigation.dart';
 import 'package:myabsen_project/model/forgot_password.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
@@ -21,63 +25,120 @@ class _LoginAbsenState extends State<LoginAbsen> {
 
   bool _isObscure = true;
   bool isLoading = false;
+  String? errorMessage;
+  RegisterUserModel? user;
 
-  Future<void> loginUser() async {
+  Future<void> showLottieDialog(
+    BuildContext context, {
+    required String asset,
+    required String message,
+  }) async {
+    final completer = Completer<void>();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 120,
+                  child: Lottie.asset(
+                    asset,
+                    repeat: false,
+                    onLoaded: (composition) {
+                      Future.delayed(composition.duration, () {
+                        if (Navigator.canPop(dialogContext)) {
+                          Navigator.of(
+                            dialogContext,
+                            rootNavigator: true,
+                          ).pop();
+                          completer.complete();
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return completer.future;
+  }
+
+  void loginUser() async {
+    if (!mounted) return;
     setState(() {
       isLoading = true;
+      errorMessage = null;
     });
-
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
-
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email dan Password tidak boleh kosong")),
+      if (!mounted) return;
+      await showLottieDialog(
+        context,
+        asset: "assets/lottie/warning.json",
+        message: "Email dan password tidak boleh kosong",
       );
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
       return;
     }
-
     try {
-      //Panggil API login
-      final LoginModel response = await AuthenticationAPI.loginUser(
+      final results = await AuthenticationAPI.loginUser(
         email: email,
         password: password,
       );
+      if (!mounted) return;
+      setState(() {
+        user = results;
+      });
+      if (!mounted) return;
+      await showLottieDialog(
+        context,
+        asset: "assets/lottie/success.json",
+        message: "Login berhasil",
+      );
+      await PreferenceHandler.saveToken(user?.data?.token.toString() ?? "");
+      final savedUserId = await PreferenceHandler.getUserId();
+      print("Saved User Id: $savedUserId");
 
       if (!mounted) return;
-
-      // ✅ Simpan data user ke SharedPreferences
-      await PreferenceHandler.saveUserData(
-        token: response.data?.token ?? '',
-        userId: response.data?.user?.id ?? 0,
-        email: response.data?.user?.email ?? '',
-        name: response.data?.user?.name ?? '',
-        batch: response.data?.user?.batch?.batchKe ?? '',
-      );
-
-      // lanjut ke BottomPage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => BottomPage()),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Selamat datang, ${response.data?.user?.name ?? 'User'}",
-          ),
-        ),
-      );
+      context.pushReplacement(BottomPage());
     } catch (e) {
-      // ❌ Jika login gagal
+      print(e);
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      setState(() {
+        errorMessage = e.toString();
+      });
+      if (!mounted) return;
+      await showLottieDialog(
         context,
-      ).showSnackBar(SnackBar(content: Text("Login gagal: $e")));
+        asset: "assets/lottie/error.json",
+        message: "Login gagal\n$errorMessage",
+      );
     } finally {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
