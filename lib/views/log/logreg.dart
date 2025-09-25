@@ -1,5 +1,5 @@
+import 'package:MyAbsen/views/log/register.dart';
 import 'package:flutter/material.dart';
-import 'package:myabsen_project/views/log/register.dart';
 
 class Logreg extends StatefulWidget {
   const Logreg({super.key});
@@ -44,7 +44,7 @@ class _LogregState extends State<Logreg> {
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 30,
-                fontFamily: 'Poppins_bold',
+                fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -85,24 +85,36 @@ class _LogregState extends State<Logreg> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF000DFF),
+                  padding: EdgeInsets.zero, // <-- Hilangkan padding
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(19),
                   ),
                 ),
-                child: const Text(
-                  "Daftar",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      // <-- Tambahkan gradient di sini
+                      colors: [Color(0xFF436EFF), Color(0xFF000DFF)],
+                    ),
+                    borderRadius: BorderRadius.circular(19),
+                  ),
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "Daftar",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
 
             const SizedBox(height: 16),
-
             SizedBox(
               width: 320,
               height: 52,
@@ -111,22 +123,43 @@ class _LogregState extends State<Logreg> {
                   Navigator.pushNamed(context, '/login');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[500],
+                  padding: EdgeInsets.zero, // Hapus padding
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(19),
                   ),
+                  elevation: 8, // Tambahkan elevasi agar bayangan terlihat
+                  shadowColor: Colors.black.withOpacity(0.3), // Warna bayangan
                 ),
-                child: const Text(
-                  "Masuk",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    // Gradient abu-abu gelap untuk tampilan premium
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4c4c4c), Color(0xFF1f1f1f)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(19),
+                  ),
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Masuk",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
           ],
         ),

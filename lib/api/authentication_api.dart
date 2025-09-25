@@ -226,7 +226,7 @@ class AuthenticationAPI {
     print("📥 TRAINING Response: $body");
 
     if (res.statusCode == 200) {
-      final model = GetListTrainingModel.fromJson(body);
+      final model = GetListHistoryModel.fromJson(body);
       return model.data ?? [];
     } else {
       final msg = body?["message"] ?? "Gagal ambil training list";

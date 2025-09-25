@@ -41,11 +41,11 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 290),
+            SizedBox(height: 350),
             Container(
               child: Image(
                 image: AssetImage("assets/images/image/logo.png"),
-                width: 300,
+                width: 250,
                 height: 250,
                 fit: BoxFit.cover,
               ),
@@ -53,17 +53,19 @@ class _SplashScreenState extends State<SplashScreen> {
             Spacer(),
             RichText(
               text: TextSpan(
-                text: 'Powered by ',
+                text: '© 2025',
                 style: const TextStyle(
                   color: Color.fromARGB(255, 121, 117, 117),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
+                  fontFamily: 'Poppins',
                 ),
                 children: <TextSpan>[
                   TextSpan(
                     text: 'Ayad Allawi',
                     style: const TextStyle(
                       color: Color.fromARGB(255, 0, 4, 255),
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ],

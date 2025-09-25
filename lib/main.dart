@@ -32,15 +32,15 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: SplashScreen.id,
       routes: {
-        '/splash_screen': (context) => const SplashScreen(),
+        SplashScreen.id: (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingPage(),
         '/login': (context) => const LoginAbsen(),
         '/logreg': (context) => const Logreg(),
         '/register_futsal': (context) => const RegisterPage(),
-        '/home': (context) => HomePage(),
+        '/home': (context) => const HomePage(),
         '/bot': (context) => BottomPage(),
       },
-      // home: SplashScreen(),
+      home: SplashScreen(),
     );
   }
 }

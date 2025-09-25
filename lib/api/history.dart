@@ -1,18 +1,22 @@
+// File: lib/api/history_service.dart
+
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:MyAbsen/api/endpoint/endpoint.dart';
-import 'package:MyAbsen/model/delete_absen.dart';
-import 'package:MyAbsen/model/history.dart';
-import 'package:MyAbsen/preference/shared_preference.dart';
+import 'package:MyAbsen/api/endpoint/endpoint.dart'; // Pastikan path ini benar
+import 'package:MyAbsen/model/delete_absen.dart'; // Pastikan path ini benar
+import 'package:MyAbsen/model/get_list_training_model.dart';
+import 'package:MyAbsen/preference/shared_preference.dart'; // Pastikan path ini benar
 import 'package:http/http.dart' as http;
 
 class HistoryService {
-  static Future<GetHistoryModel> getHistory() async {
+  // Mengembalikan model yang sudah pasti benar
+  static Future<GetListHistoryModel> getHistory() async {
     final token = await PreferenceHandler.getToken();
     if (token == null || token.isEmpty) {
       throw Exception("Token tidak valid. Silakan login ulang.");
     }
+
     final url = Uri.parse(Endpoint.history);
     final response = await http.get(
       url,
@@ -20,15 +24,11 @@ class HistoryService {
     );
 
     if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      if (jsonResponse['data'] != null && jsonResponse['data'] is List) {
-        return GetHistoryModel.fromJson(jsonResponse);
-      } else {
-        return GetHistoryModel(message: "Tidak ada data riwayat", data: []);
-      }
+      // Langsung parse menggunakan fungsi helper dari model
+      return getListHistoryModelFromJson(response.body);
     } else {
       throw Exception(
-        "Gagal mengambil riwayat absensi. Status code: ${response.statusCode}",
+        "Gagal mengambil riwayat. Status: ${response.statusCode}",
       );
     }
   }
@@ -40,7 +40,6 @@ class HistoryService {
     }
     final url = Uri.parse('${Endpoint.deleteAbsen}/$idAbsen');
 
-    // UBAH BAGIAN INI
     final res = await http
         .delete(
           url,
@@ -50,14 +49,12 @@ class HistoryService {
           },
         )
         .timeout(
-          const Duration(seconds: 10), // <-- TAMBAHKAN INI
+          const Duration(seconds: 10),
           onTimeout: () {
-            // Ini akan dijalankan jika waktu tunggu habis
             throw TimeoutException('Koneksi ke server terputus, coba lagi.');
           },
         );
 
-    // Sisa kodenya tetap sama
     if (res.statusCode == 200) {
       return deleteAbsenModelFromJson(res.body);
     } else {

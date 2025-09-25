@@ -1,14 +1,15 @@
 import 'dart:async';
 
+import 'package:MyAbsen/api/authentication_api.dart';
+import 'package:MyAbsen/extension/navigation.dart';
+import 'package:MyAbsen/model/forgot_password.dart';
+import 'package:MyAbsen/model/login.dart';
+import 'package:MyAbsen/preference/shared_preference.dart';
+import 'package:MyAbsen/views/log/register.dart';
+import 'package:MyAbsen/widgets/navbar/bottom.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:myabsen_project/api/authentication_api.dart';
-import 'package:myabsen_project/extension/navigation.dart';
-import 'package:myabsen_project/model/forgot_password.dart';
-import 'package:myabsen_project/model/login.dart';
-import 'package:myabsen_project/preference/shared_preference.dart';
-import 'package:myabsen_project/views/log/register.dart';
-import 'package:myabsen_project/widgets/navbar/bottom.dart';
+
 
 class LoginAbsen extends StatefulWidget {
   const LoginAbsen({super.key});

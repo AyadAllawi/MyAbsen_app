@@ -46,10 +46,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
     }
   }
 
-  // =======================================================================
-  // =================== PENAMBAHAN FUNGSI DELETE ==========================
-  // =======================================================================
-
   Future<void> _handleDeleteAbsen(int idAbsen) async {
     try {
       await HistoryService.deleteAbsen(idAbsen: idAbsen);
@@ -120,7 +116,8 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
   }
 
   Future<void> _createAndExportPdf() async {
-    var status = await Permission.manageExternalStorage.request();
+    // pakai Permission.storage biar lebih aman
+    var status = await Permission.storage.request();
 
     if (!status.isGranted) {
       if (mounted) {
@@ -139,7 +136,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
         return [
           formatDate(history.attendanceDate),
           history.checkInTime ?? '-',
-          history.checkOutTime ?? '-', // ✅ fix typo disini
+          history.checkOutTime ?? '-',
         ];
       }).toList();
 
@@ -364,15 +361,15 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                           ),
                                         ],
                                       ),
-                                      if (item.status == "izin" &&
-                                          item.alasanIzin != null &&
-                                          item.alasanIzin!.isNotEmpty)
+                                      if (item.toString() == "izin" &&
+                                          item.id != null &&
+                                          item.title!.isNotEmpty)
                                         Padding(
                                           padding: const EdgeInsets.only(
                                             top: 8,
                                           ),
                                           child: Text(
-                                            "Alasan: ${item.alasanIzin}",
+                                            "Alasan: ${item.title}",
                                             style: const TextStyle(
                                               fontFamily: "Poppins",
                                               fontStyle: FontStyle.italic,
@@ -399,7 +396,8 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                           ),
                   ),
           ),
-          Center(
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Text(
               "© 2025 Ayad Allawi",
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
