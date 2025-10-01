@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myabsen_project/api/history.dart';
+import 'package:myabsen_project/api/history.dart'; // Pastikan ini import ke file API-mu
 import 'package:myabsen_project/model/history.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -26,9 +26,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
   }
 
   Future<void> _fetchHistoryData() async {
-    setState(
-      () => isLoading = true,
-    ); // tambahin ini biar muncul loading saat refresh
+    setState(() => isLoading = true);
     try {
       final response = await HistoryService.getHistory();
       setState(() {
@@ -47,8 +45,81 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
     }
   }
 
+  // =======================================================================
+  // =================== PENAMBAHAN FUNGSI DELETE ==========================
+  // =======================================================================
+
+  Future<void> _handleDeleteAbsen(int idAbsen) async {
+    // <-- KUNCI PERBAIKAN: PASTIKAN INI 'int'
+    try {
+      await HistoryService.deleteAbsen(idAbsen: idAbsen);
+      setState(() {
+        historyData.removeWhere((item) => item.id == idAbsen);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Data absen berhasil dihapus"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('⛔️ TERTANGKAP ERROR SAAT MENGHAPUS!');
+      print('TIPE ERROR: ${e.runtimeType}'); // Mencetak tipe errornya
+      print('PESAN ERROR: $e'); // Mencetak pesan errornya
+      print(
+        'JEJAK STACK (LOKASI ERROR): $stackTrace',
+      ); // Mencetak jejak errornya
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            // Kita tampilkan juga tipe errornya di notifikasi
+            content: Text("Gagal: [${e.runtimeType}] ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDeleteConfirmationDialog(int idAbsen) {
+    // <-- KUNCI PERBAIKAN: PASTIKAN INI 'int'
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Hapus"),
+          content: const Text(
+            "Yakin mau hapus data absen ini? Tindakan ini tidak bisa dibatalkan.",
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Batal"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text(
+                "Ya, Hapus",
+                style: TextStyle(color: Colors.red),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _handleDeleteAbsen(idAbsen);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // =======================================================================
+  // =================== AKHIR DARI PENAMBAHAN FUNGSI ======================
+  // =======================================================================
+
   Future<void> _createAndExportPdf() async {
-    // ✅ Request izin sesuai Android 11+
+    // Kode PDF lu yang sudah ada (tidak diubah)
     var status = await Permission.manageExternalStorage.request();
 
     if (!status.isGranted) {
@@ -100,7 +171,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
         ),
       );
 
-      // ✅ Simpan langsung ke folder Download
       final downloadsDir = Directory('/storage/emulated/0/Download');
       if (!downloadsDir.existsSync()) {
         downloadsDir.createSync(recursive: true);
@@ -125,7 +195,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
 
   String formatDate(DateTime? date) {
     if (date == null) return "-";
-    return DateFormat("EEEE, dd MMMM yyyy", "id_ID").format(date);
+    return DateFormat("EEEE, dd MMMM yy", "id_ID").format(date);
   }
 
   Color getStatusColor(String? status) {
@@ -181,6 +251,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
               ),
             ),
           ),
+
           // BODY
           Expanded(
             child: isLoading
@@ -189,6 +260,7 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                     onRefresh: _fetchHistoryData,
                     child: historyData.isEmpty
                         ? ListView(
+                            // dibungkus ListView biar bisa ditarik (refresh)
                             children: const [
                               SizedBox(height: 50),
                               Center(child: Text("Belum ada riwayat absensi")),
@@ -199,54 +271,61 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                             itemCount: historyData.length,
                             itemBuilder: (context, index) {
                               final item = historyData[index];
+                              // =================================================================
+                              // ================= MODIFIKASI BAGIAN CARD ========================
+                              // =================================================================
                               return Card(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 3,
                                 margin: const EdgeInsets.symmetric(vertical: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.fromLTRB(
+                                    15,
+                                    8,
+                                    8,
+                                    8,
+                                  ),
+                                  title: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        formatDate(item.attendanceDate),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          fontFamily: "Poppins",
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: getStatusColor(item.status),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item.status?.toUpperCase() ?? "-",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: "Poppins",
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            formatDate(item.attendanceDate),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              fontFamily: "Poppins",
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: getStatusColor(
-                                                item.status,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              item.status?.toUpperCase() ?? "-",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                fontFamily: "Poppins",
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                       const SizedBox(height: 10),
                                       Row(
                                         children: [
@@ -257,15 +336,20 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                           ),
                                           const SizedBox(width: 6),
                                           Expanded(
+                                            // <-- TAMBAHKAN INI
                                             child: Text(
-                                              "Masuk: ${item.checkInTime ?? '-'} (${item.checkInAddress ?? '-'})",
+                                              "Masuk: ${item.checkInTime ?? '-'} ",
                                               style: const TextStyle(
                                                 fontFamily: "Poppins",
+                                                overflow: TextOverflow.ellipsis,
                                               ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
                                       ),
+                                      const SizedBox(height: 4),
+
                                       Row(
                                         children: [
                                           const Icon(
@@ -276,10 +360,12 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                           const SizedBox(width: 6),
                                           Expanded(
                                             child: Text(
-                                              "Pulang: ${item.checkOutTime ?? 'Belum Absen'} (${item.checkOutAddress ?? '-'})",
+                                              "Pulang: ${item.checkOutTime ?? 'Belum Absen'}",
                                               style: const TextStyle(
                                                 fontFamily: "Poppins",
+                                                overflow: TextOverflow.ellipsis,
                                               ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
@@ -302,11 +388,28 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                                         ),
                                     ],
                                   ),
+                                  trailing: IconButton(
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.red.shade400,
+                                    ),
+                                    onPressed: () {
+                                      if (item.id != null) {
+                                        _showDeleteConfirmationDialog(item.id!);
+                                      }
+                                    },
+                                  ),
                                 ),
                               );
                             },
                           ),
                   ),
+          ),
+          Center(
+            child: Text(
+              "© 2025 Ayad Allawi",
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
           ),
         ],
       ),

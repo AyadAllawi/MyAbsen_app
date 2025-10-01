@@ -5,6 +5,7 @@ import 'package:intl/intl.dart'; // ⬅️ buat format tanggal & jam
 import 'package:myabsen_project/api/endpoint/endpoint.dart';
 import 'package:myabsen_project/model/absen_chek_in.dart';
 import 'package:myabsen_project/model/absen_chek_out.dart';
+import 'package:myabsen_project/model/delete_absen.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
 
 class AttendanceAPI {
@@ -60,6 +61,44 @@ class AttendanceAPI {
     final url = Uri.parse(Endpoint.checkOut);
     final token =
         await PreferenceHandler.getToken(); // ambil token dari SharedPreference
+
+    Future<DeleteAbsenModel> deleteAbsen({required int idAbsen}) async {
+      // 1. Ambil token buat otentikasi
+      final token = await PreferenceHandler.getToken();
+      if (token == null) {
+        throw Exception("Token tidak ditemukan, silakan login ulang.");
+      }
+
+      // 2. Siapin URL-nya, lengkap dengan ID absen yang mau dihapus
+      final url = Uri.parse('${Endpoint.deleteAbsen}/$idAbsen');
+      print("📤 Sending DELETE request to: $url");
+
+      // 3. Kirim request DELETE ke server
+      final res = await http.delete(
+        url,
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      // 4. Proses respons dari server
+      if (res.statusCode == 200) {
+        // Kalau berhasil (status code 200 OK)
+        print("✅ Absen berhasil dihapus. Response: ${res.body}");
+        return deleteAbsenModelFromJson(res.body);
+      } else {
+        // Kalau gagal
+        print(
+          "❌ Gagal hapus absen. Status: ${res.statusCode}, Body: ${res.body}",
+        );
+        // Coba ambil pesan error dari body json-nya
+        final errorBody = json.decode(res.body);
+        final errorMessage =
+            errorBody['message'] ?? 'Gagal menghapus data absen.';
+        throw Exception(errorMessage);
+      }
+    }
 
     // ✅ format jam & tanggal
     String checkoutTime = DateFormat('HH:mm').format(DateTime.now());

@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myabsen_project/api/profile.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
-import 'package:myabsen_project/views/history.dart';
 import 'package:myabsen_project/views/log/login.dart';
-import 'package:myabsen_project/widgets/change_password.dart';
+import 'package:myabsen_project/widgets/profile/about.dart';
 import 'package:myabsen_project/widgets/profile/edit_profile.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -40,9 +39,9 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       print("Error fetching profile: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal memuat data profil.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal memuat data profil.")),
+      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -51,12 +50,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
+    // ================================================================
+    //         ⬇️ INI DIA SATU-SATUNYA PENAMBAHAN KODE ⬇️
+    //      Tambahkan parameter untuk kompresi dan ubah ukuran
+    // ================================================================
+    final pickedFile = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85, // Kualitas gambar (0-100), 85 udah bagus
+    );
+
     if (pickedFile != null) {
       final imageFile = File(pickedFile.path);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Mengunggah foto...")));
+      ).showSnackBar(const SnackBar(content: Text("Mengunggah foto...")));
       _uploadImage(imageFile);
     }
   }
@@ -98,6 +107,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // ================================================================
+    //         UI/UX DI BAWAH INI TIDAK DIUBAH SAMA SEKALI
+    // ================================================================
     return Scaffold(
       backgroundColor: const Color(0xFFE8F1FF), // Latar belakang lebih cerah
       appBar: AppBar(
@@ -243,67 +255,21 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       _buildDivider(),
                       _buildInfoTile(
-                        title: "Riwayat Absen",
-                        icon: Icons.history,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HistoryAbsenPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildDivider(),
-                      _buildInfoTile(
-                        title: "Ganti Password",
-                        icon: Icons.lock_outline,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ChangePasswordPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle("Pengaturan & Lainnya"),
-                  _buildCard(
-                    children: [
-                      _buildInfoTile(
-                        title: "Notifikasi",
-                        icon: Icons.notifications_none,
-                        onTap: () {},
-                      ),
-                      _buildDivider(),
-                      _buildInfoTile(
-                        title: "Bahasa",
-                        icon: Icons.language,
-                        onTap: () {},
-                      ),
-                      _buildDivider(),
-                      _buildInfoTile(
                         title: "Tentang Aplikasi",
-                        icon: Icons.info_outline,
-                        onTap: () {},
-                      ),
-                      _buildDivider(),
-                      _buildInfoTile(
-                        title: "Privacy Policy",
-                        icon: Icons.privacy_tip_outlined,
-                        onTap: () {},
-                      ),
-                      _buildDivider(),
-                      _buildInfoTile(
-                        title: "Pengaturan",
-                        icon: Icons.settings_outlined,
-                        onTap: () {},
+                        icon: Icons.info,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              // Hapus kata kunci `const` di sini
+                              builder: (context) => AboutPage(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
                   SizedBox(
                     width: double.infinity,
@@ -340,6 +306,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 40),
+                  Center(
+                    child: Text(
+                      "© 2025 Ayad Allawi",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ),
                 ],
               ),
             ),

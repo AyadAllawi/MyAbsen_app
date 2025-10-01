@@ -197,7 +197,7 @@ class AuthenticationAPI {
   }
 
   static Future<GetListTrainingByIdModel> getListTraining() async {
-    final url = Uri.parse(Endpoint.training);
+    final url = Uri.parse(Endpoint.getTraining);
     final token = await PreferenceHandler.getToken();
 
     if (token == null) {
@@ -224,7 +224,7 @@ class AuthenticationAPI {
   }
 
   static Future<GetBatchesModel> getListBatch() async {
-    final url = Uri.parse(Endpoint.batches);
+    final url = Uri.parse(Endpoint.getBatch);
     final token = await PreferenceHandler.getToken();
 
     if (token == null) {

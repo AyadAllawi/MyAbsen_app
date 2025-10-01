@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:myabsen_project/api/endpoint/endpoint.dart';
 import 'package:myabsen_project/model/get_bacth.dart';
-import 'package:intl/intl.dart';
 import 'package:myabsen_project/model/get_list_training_model.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/model/register.dart';
@@ -48,7 +47,6 @@ class AuthenticationAPI {
     final readImage = await profilePhoto.readAsBytes();
     final b64 = base64Encode(readImage);
 
-    // ⚠️ cek dulu apakah backend lu butuh prefix
     final imageWithPrefix = "data:image/png;base64,$b64";
 
     final payload = {
@@ -166,28 +164,28 @@ class AuthenticationAPI {
   }
 
   /// RESET PASSWORD
-  static Future<void> resetPassword({
+  static Future<void> resetPasswordWithOtp({
     required String email,
     required String otp,
     required String password,
   }) async {
     final url = Uri.parse(Endpoint.resetPassword);
-    final res = await http.post(
+    print("📤 Resetting password for: $email with OTP");
+
+    final response = await http.post(
       url,
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
       },
-      body: jsonEncode({"email": email, "otp": otp, "password": password}),
+      body: json.encode({'email': email, 'otp': otp, 'password': password}),
     );
 
-    final body = _safeDecode(res.body);
-    print("📥 RESET Response: $body");
-
-    if (res.statusCode != 200) {
-      final msg = _extractErrorMessage(body, "Gagal reset password");
-      throw Exception(msg);
+    if (response.statusCode != 200) {
+      final body = json.decode(response.body);
+      throw Exception(body['message'] ?? 'Gagal mereset password.');
     }
+    // Kalau berhasil, tidak perlu return apa-apa
   }
 
   /// GET LIST BATCH
@@ -234,6 +232,26 @@ class AuthenticationAPI {
       final msg = body?["message"] ?? "Gagal ambil training list";
       throw Exception(msg);
     }
+  }
+
+  static Future<void> requestOtp(String email) async {
+    final url = Uri.parse(Endpoint.forgotPassword);
+    print("📤 Requesting OTP for: $email to URL: $url");
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json',
+      },
+      body: json.encode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final body = json.decode(response.body);
+      throw Exception(body['message'] ?? 'Gagal mengirim OTP.');
+    }
+    // Kalau berhasil, tidak perlu return apa-apa, cukup jangan error
   }
 
   /// LOGOUT

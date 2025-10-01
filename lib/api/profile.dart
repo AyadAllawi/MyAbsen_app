@@ -9,27 +9,17 @@ class ProfileAPI {
   static Future<dynamic> getProfile() async {
     final url = Uri.parse(Endpoint.profile);
     final token = await PreferenceHandler.getToken();
-
-    // Tambahkan print ini
-    print('URL Penuh untuk Profile: ${url.toString()}');
-
     final res = await http.get(
       url,
       headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
     );
-    // Tambahkan baris ini untuk melihat status dan respons dari server
-    print('Status API Profile: ${res.statusCode}');
-    print('Respons API Profile: ${res.body}');
-
     if (res.statusCode == 200) {
       return json.decode(res.body);
     }
-
     final body = json.decode(res.body);
     throw Exception(body["message"] ?? "Gagal ambil profile");
   }
 
-  // ✨ TAMBAHKAN 'async' DI SINI
   static Future<dynamic> updateProfile({
     required String name,
     required String email,
@@ -50,18 +40,43 @@ class ProfileAPI {
     throw Exception(body["message"] ?? "Gagal update profile");
   }
 
-  // ✨ TAMBAHKAN 'async' DI SINI
+  // ================================================================
+  //         ⬇️ INI DIA PERBAIKAN FINALNYA (PAKAI BASE64) ⬇️
+  // ================================================================
   static Future<dynamic> updatePhoto({required File file}) async {
     final url = Uri.parse(Endpoint.profilePhoto);
     final token = await PreferenceHandler.getToken();
 
-    var request = http.MultipartRequest('PUT', url);
-    request.headers['Authorization'] = 'Bearer $token';
-    request.files.add(await http.MultipartFile.fromPath('photo', file.path));
-    final streamed = await request.send();
-    final res = await http.Response.fromStream(streamed);
-    if (res.statusCode == 200) return json.decode(res.body);
-    final body = json.decode(res.body);
-    throw Exception(body["message"] ?? "Gagal update foto");
+    // 1. Baca file gambar menjadi bytes, lalu ubah ke Base64 string
+    final bytes = await file.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final imageWithPrefix = "data:image/png;base64,$base64Image";
+
+    // 2. Kirim sebagai JSON biasa dengan method PUT
+    final response = await http.put(
+      url,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({"profile_photo": imageWithPrefix}),
+    );
+
+    print('📸 Status Update Foto: ${response.statusCode}');
+    print('📸 Body Update Foto: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+
+    try {
+      final body = json.decode(response.body);
+      throw Exception(body["message"] ?? "Gagal update foto.");
+    } catch (e) {
+      throw Exception(
+        "Gagal update foto. Server error status: ${response.statusCode}",
+      );
+    }
   }
 }

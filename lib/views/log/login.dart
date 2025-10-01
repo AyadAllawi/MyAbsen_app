@@ -41,7 +41,7 @@ class _LoginAbsenState extends State<LoginAbsen> {
     }
 
     try {
-      // 🔥 Panggil API login
+      //Panggil API login
       final LoginModel response = await AuthenticationAPI.loginUser(
         email: email,
         password: password,
@@ -64,7 +64,6 @@ class _LoginAbsenState extends State<LoginAbsen> {
         MaterialPageRoute(builder: (context) => BottomPage()),
       );
 
-      // ✅ Snackbar tetap ada
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

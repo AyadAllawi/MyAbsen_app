@@ -60,9 +60,9 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // FUNGSI _pickImage YANG DIUBAH - TAMBAH FITUR KAMERA
+  
   Future<void> _pickImage() async {
-    // Tampilkan bottom sheet untuk pilihan
+  
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -92,7 +92,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // FUNGSI BARU UNTUK MENDAPATKAN GAMBAR
+  
   Future<void> _getImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(

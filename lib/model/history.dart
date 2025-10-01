@@ -1,6 +1,4 @@
-// To parse this JSON data, do
-//
-//     final getHistoryModel = getHistoryModelFromJson(jsonString);
+// model/history.dart
 
 import 'dart:convert';
 
@@ -36,16 +34,10 @@ class Datum {
   int? id;
   DateTime? attendanceDate;
   String? checkInTime;
-  dynamic checkOutTime;
-  double? checkInLat;
-  double? checkInLng;
-  dynamic checkOutLat;
-  dynamic checkOutLng;
-  String? checkInAddress;
-  dynamic checkOutAddress;
-  String? checkInLocation;
-  dynamic checkOutLocation;
+  String? checkOutTime;
   String? status;
+  String? checkInAddress;
+  String? checkOutAddress;
   String? alasanIzin;
 
   Datum({
@@ -53,35 +45,27 @@ class Datum {
     this.attendanceDate,
     this.checkInTime,
     this.checkOutTime,
-    this.checkInLat,
-    this.checkInLng,
-    this.checkOutLat,
-    this.checkOutLng,
+    this.status,
     this.checkInAddress,
     this.checkOutAddress,
-    this.checkInLocation,
-    this.checkOutLocation,
-    this.status,
     this.alasanIzin,
   });
 
+  // ================================================================
+  //                INI BAGIAN YANG PALING PENTING
+  // ================================================================
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-    id: json["id"],
+    id: json["id"], // LANGSUNG, KARENA KITA TAHU API MENGIRIM int
+
     attendanceDate: json["attendance_date"] == null
         ? null
         : DateTime.parse(json["attendance_date"]),
-    checkInTime: json["check_in_time"]?.toString(),
-    checkOutTime: json["check_out_time"]?.toString(),
-    checkInLat: json["check_in_lat"]?.toDouble(),
-    checkInLng: json["check_in_lng"]?.toDouble(),
-    checkOutLat: json["check_out_lat"]?.toDouble(),
-    checkOutLng: json["check_out_lng"]?.toDouble(),
-    checkInAddress: json["check_in_address"]?.toString(),
-    checkOutAddress: json["check_out_address"]?.toString(),
-    checkInLocation: json["check_in_location"]?.toString(),
-    checkOutLocation: json["check_out_location"]?.toString(),
-    status: json["status"]?.toString(),
-    alasanIzin: json["alasan_izin"]?.toString(),
+    checkInTime: json["check_in_time"],
+    checkOutTime: json["check_out_time"],
+    status: json["status"],
+    checkInAddress: json["check_in_address"],
+    checkOutAddress: json["check_out_address"],
+    alasanIzin: json["alasan_izin"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -90,15 +74,9 @@ class Datum {
         "${attendanceDate!.year.toString().padLeft(4, '0')}-${attendanceDate!.month.toString().padLeft(2, '0')}-${attendanceDate!.day.toString().padLeft(2, '0')}",
     "check_in_time": checkInTime,
     "check_out_time": checkOutTime,
-    "check_in_lat": checkInLat,
-    "check_in_lng": checkInLng,
-    "check_out_lat": checkOutLat,
-    "check_out_lng": checkOutLng,
+    "status": status,
     "check_in_address": checkInAddress,
     "check_out_address": checkOutAddress,
-    "check_in_location": checkInLocation,
-    "check_out_location": checkOutLocation,
-    "status": status,
     "alasan_izin": alasanIzin,
   };
 }
