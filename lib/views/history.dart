@@ -24,6 +24,19 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
     return DateFormat("EEEE, dd MMMM yyyy", "id_ID").format(date);
   }
 
+  Color getStatusColor(String? status) {
+    switch (status) {
+      case "masuk":
+        return Colors.green;
+      case "izin":
+        return Colors.orange;
+      case "alpha":
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,15 +76,42 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        formatDate(item.attendanceDate),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          fontFamily: "Poppins",
-                        ),
+                      // Row Tanggal + Badge
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            formatDate(item.attendanceDate),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontFamily: "Poppins",
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: getStatusColor(item.status),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              item.status?.toUpperCase() ?? "-",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "Poppins",
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 10),
+
+                      // Check In
                       Row(
                         children: [
                           const Icon(
@@ -80,28 +120,37 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                             color: Colors.green,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            "Masuk: ${item.checkInTime ?? '-'}",
-                            style: const TextStyle(fontFamily: "Poppins"),
+                          Expanded(
+                            child: Text(
+                              "Masuk: ${item.checkInTime ?? '-'} (${item.checkInAddress ?? '-'})",
+                              style: const TextStyle(fontFamily: "Poppins"),
+                            ),
                           ),
                         ],
                       ),
+
+                      // Check Out
                       Row(
                         children: [
                           const Icon(Icons.logout, size: 18, color: Colors.red),
                           const SizedBox(width: 6),
-                          Text(
-                            "Pulang: ${item.checkOutTime ?? 'Belum Absen'}",
-                            style: const TextStyle(fontFamily: "Poppins"),
+                          Expanded(
+                            child: Text(
+                              "Pulang: ${item.checkOutTime ?? 'Belum Absen'} (${item.checkOutAddress ?? '-'})",
+                              style: const TextStyle(fontFamily: "Poppins"),
+                            ),
                           ),
                         ],
                       ),
-                      if (item.alasanIzin != null &&
+
+                      // Alasan Izin
+                      if (item.status == "izin" &&
+                          item.alasanIzin != null &&
                           item.alasanIzin!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            "Izin: ${item.alasanIzin}",
+                            "Alasan: ${item.alasanIzin}",
                             style: const TextStyle(
                               fontFamily: "Poppins",
                               fontStyle: FontStyle.italic,
@@ -109,15 +158,6 @@ class _HistoryAbsenPageState extends State<HistoryAbsenPage> {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Lokasi Masuk: ${item.checkInAddress ?? '-'}",
-                        style: const TextStyle(fontFamily: "Poppins"),
-                      ),
-                      Text(
-                        "Lokasi Pulang: ${item.checkOutAddress ?? '-'}",
-                        style: const TextStyle(fontFamily: "Poppins"),
-                      ),
                     ],
                   ),
                 ),

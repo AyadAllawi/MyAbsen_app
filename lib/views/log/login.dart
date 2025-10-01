@@ -3,7 +3,7 @@ import 'package:myabsen_project/api/authentication_api.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
 import 'package:myabsen_project/views/log/register.dart';
-import 'package:myabsen_project/views/navbar/bottom.dart';
+import 'package:myabsen_project/widgets/navbar/bottom.dart';
 
 class LoginAbsen extends StatefulWidget {
   const LoginAbsen({super.key});
@@ -46,31 +46,31 @@ class _LoginAbsenState extends State<LoginAbsen> {
         password: password,
       );
 
-     if (!mounted) return;
+      if (!mounted) return;
 
-// ✅ Simpan data user ke SharedPreferences
-await PreferenceHandler.saveUserData(
-  token: response.data?.token ?? '',
-  userId: response.data?.user?.id ?? 0,
-  email: response.data?.user?.email ?? '',
-  name: response.data?.user?.name ?? '',
-  batch: response.data?.user?.batch ?? '',
-);
+      // ✅ Simpan data user ke SharedPreferences
+      await PreferenceHandler.saveUserData(
+        token: response.data?.token ?? '',
+        userId: response.data?.user?.id ?? 0,
+        email: response.data?.user?.email ?? '',
+        name: response.data?.user?.name ?? '',
+        batch: response.data?.user?.batch?.batchKe ?? '',
+      );
 
-// lanjut ke BottomPage
-Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(builder: (context) => BottomPage()),
-);
+      // lanjut ke BottomPage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => BottomPage()),
+      );
 
-// ✅ Snackbar tetap ada
-ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text(
-      "Selamat datang, ${response.data?.user?.name ?? 'User'}",
-    ),
-  ),
-);
+      // ✅ Snackbar tetap ada
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Selamat datang, ${response.data?.user?.name ?? 'User'}",
+          ),
+        ),
+      );
     } catch (e) {
       // ❌ Jika login gagal
       if (!mounted) return;

@@ -1,6 +1,4 @@
-// To parse this JSON data, do
-//
-//     final loginModel = loginModelFromJson(jsonString);
+// Di file model/login.dart
 
 import 'dart:convert';
 
@@ -44,7 +42,7 @@ class User {
   dynamic emailVerifiedAt;
   DateTime? createdAt;
   DateTime? updatedAt;
-  String? batch;
+  Batch? batch; // <-- Ubah ini menjadi objek Batch
 
   User({
     this.id,
@@ -67,6 +65,9 @@ class User {
     updatedAt: json["updated_at"] == null
         ? null
         : DateTime.parse(json["updated_at"]),
+    batch: json["batch"] == null
+        ? null
+        : Batch.fromJson(json["batch"]), // <-- Ubah ini
   );
 
   Map<String, dynamic> toJson() => {
@@ -74,6 +75,48 @@ class User {
     "name": name,
     "email": email,
     "email_verified_at": emailVerifiedAt,
+    "created_at": createdAt?.toIso8601String(),
+    "updated_at": updatedAt?.toIso8601String(),
+    "batch": batch?.toJson(), // <-- Ubah ini
+  };
+}
+
+// Tambahkan class Batch baru ini
+class Batch {
+  int? id;
+  String? batchKe;
+  String? startDate;
+  String? endDate;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+
+  Batch({
+    this.id,
+    this.batchKe,
+    this.startDate,
+    this.endDate,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Batch.fromJson(Map<String, dynamic> json) => Batch(
+    id: json["id"],
+    batchKe: json["batch_ke"],
+    startDate: json["start_date"],
+    endDate: json["end_date"],
+    createdAt: json["created_at"] == null
+        ? null
+        : DateTime.parse(json["created_at"]),
+    updatedAt: json["updated_at"] == null
+        ? null
+        : DateTime.parse(json["updated_at"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "batch_ke": batchKe,
+    "start_date": startDate,
+    "end_date": endDate,
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
   };

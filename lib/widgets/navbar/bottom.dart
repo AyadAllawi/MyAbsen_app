@@ -35,7 +35,7 @@ class BottomPage extends StatelessWidget {
 
   static const List<NavigationDestination> _navDestinations = [
     NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
-    NavigationDestination(icon: Icon(Icons.sports_soccer), label: 'Lapangan'),
+    NavigationDestination(icon: Icon(Icons.history), label: 'Riwayat'),
     NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
   ];
 }

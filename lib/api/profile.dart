@@ -41,7 +41,7 @@ class ProfileAPI {
   static Future<dynamic> updatePhoto({required File file}) async {
     final url = Uri.parse(Endpoint.profilePhoto);
     final token = await PreferenceHandler.getToken();
-    // Multipart for file upload
+   
     var request = http.MultipartRequest('PUT', url);
     request.headers['Authorization'] = 'Bearer $token';
     request.files.add(await http.MultipartFile.fromPath('photo', file.path));

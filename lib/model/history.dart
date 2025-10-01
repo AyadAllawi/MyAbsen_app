@@ -70,18 +70,18 @@ class Datum {
     attendanceDate: json["attendance_date"] == null
         ? null
         : DateTime.parse(json["attendance_date"]),
-    checkInTime: json["check_in_time"],
-    checkOutTime: json["check_out_time"],
+    checkInTime: json["check_in_time"]?.toString(),
+    checkOutTime: json["check_out_time"]?.toString(),
     checkInLat: json["check_in_lat"]?.toDouble(),
     checkInLng: json["check_in_lng"]?.toDouble(),
-    checkOutLat: json["check_out_lat"],
-    checkOutLng: json["check_out_lng"],
-    checkInAddress: json["check_in_address"],
-    checkOutAddress: json["check_out_address"],
-    checkInLocation: json["check_in_location"],
-    checkOutLocation: json["check_out_location"],
-    status: json["status"],
-    alasanIzin: json["alasan_izin"],
+    checkOutLat: json["check_out_lat"]?.toDouble(),
+    checkOutLng: json["check_out_lng"]?.toDouble(),
+    checkInAddress: json["check_in_address"]?.toString(),
+    checkOutAddress: json["check_out_address"]?.toString(),
+    checkInLocation: json["check_in_location"]?.toString(),
+    checkOutLocation: json["check_out_location"]?.toString(),
+    status: json["status"]?.toString(),
+    alasanIzin: json["alasan_izin"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
