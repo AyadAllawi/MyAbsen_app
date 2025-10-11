@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myabsen_project/api/authentication_api.dart';
+import 'package:myabsen_project/model/forgot_password.dart';
 import 'package:myabsen_project/model/login.dart';
 import 'package:myabsen_project/preference/shared_preference.dart';
 import 'package:myabsen_project/views/log/register.dart';
@@ -181,7 +182,14 @@ class _LoginAbsenState extends State<LoginAbsen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordPage(),
+                          ),
+                        );
+                      },
                       style: TextButton.styleFrom(padding: EdgeInsets.zero),
                       child: const Text(
                         "Lupa Password?",

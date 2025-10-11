@@ -75,10 +75,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String get userName {
-    if (profile != null && profile!['name'] != null) {
-      return profile!['name'];
-    }
-    return "User";
+    return profile?['name'] ?? "User";
   }
 
   String _greeting() {
@@ -107,7 +104,9 @@ class _HomePageState extends State<HomePage> {
     try {
       final profileData = await ProfileAPI.getProfile();
       setState(() {
-        profile = profileData;
+        // PERBAIKAN: Mengambil objek 'data' dari respons API
+        // ini yang membuat nama dan foto profil muncul.
+        profile = profileData['data'];
       });
     } catch (e) {
       print("fetchProfile error: $e");
@@ -121,27 +120,22 @@ class _HomePageState extends State<HomePage> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print("Location services disabled.");
         return;
       }
-
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print("Location permission denied");
           return;
         }
       }
       if (permission == LocationPermission.deniedForever) {
-        print("Location permission denied forever");
         return;
       }
 
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-
       setState(() {
         currentPosition = pos;
       });
@@ -154,22 +148,18 @@ class _HomePageState extends State<HomePage> {
         if (placemarks.isNotEmpty) {
           final p = placemarks.first;
           final parts = [
-            if (p.name != null && p.name!.isNotEmpty) p.name,
-            if (p.street != null && p.street!.isNotEmpty) p.street,
-            if (p.subLocality != null && p.subLocality!.isNotEmpty)
-              p.subLocality,
-            if (p.locality != null && p.locality!.isNotEmpty) p.locality,
-            if (p.administrativeArea != null &&
-                p.administrativeArea!.isNotEmpty)
-              p.administrativeArea,
-          ];
-          currentAddress = parts.join(", ");
+            p.name,
+            p.street,
+            p.subLocality,
+            p.locality,
+            p.administrativeArea,
+          ].where((s) => s != null && s.isNotEmpty).join(", ");
+          currentAddress = parts;
         } else {
           currentAddress = "${pos.latitude}, ${pos.longitude}";
         }
       } catch (e) {
         currentAddress = "${pos.latitude}, ${pos.longitude}";
-        print("geocoding error: $e");
       }
 
       final meter = Geolocator.distanceBetween(
@@ -182,11 +172,9 @@ class _HomePageState extends State<HomePage> {
         distanceToOffice = meter;
       });
 
-      if (mapController != null) {
-        mapController!.animateCamera(
-          CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 16.0),
-        );
-      }
+      mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 16.0),
+      );
     } catch (e) {
       print("_determinePositionAndAddress error: $e");
     }
@@ -227,46 +215,60 @@ class _HomePageState extends State<HomePage> {
           lng: currentPosition!.longitude,
           address: currentAddress,
         );
-        print("Check-in response: ${response.toJson()}");
-
         setState(() {
           _successMessage = "Check-in berhasil!";
           _showSuccessCard = true;
+          // Perbaikan utama ada di sini: Langsung perbarui stats dengan data dari respons API
+          stats = {
+            'checkin_time': response.data?.checkInTime,
+            'checkout_time': stats?['checkout_time'],
+          };
         });
       } else {
+        // type == "checkout"
         AbsenCheckOutModel response = await AttendanceAPI.checkOut(
           lat: currentPosition!.latitude,
           lng: currentPosition!.longitude,
           address: currentAddress,
         );
-        print("Check-out response: ${response.toJson()}");
-
         setState(() {
           _successMessage = "Check-out berhasil!";
           _showSuccessCard = true;
+          // Perbaikan utama ada di sini: Langsung perbarui stats dengan data dari respons API
+          stats = {
+            'checkin_time': stats?['checkin_time'],
+            'checkout_time': response.data?.checkOutTime,
+          };
         });
       }
 
-      // auto hilang setelah 2 detik
       Future.delayed(Duration(seconds: 2), () {
         if (mounted) {
           setState(() => _showSuccessCard = false);
         }
       });
-
-      await Future.wait([fetchStats(), _determinePositionAndAddress()]);
+      // **Baris ini yang dihapus. Tidak perlu lagi meminta data dari server setelah berhasil mengirim.**
+      // await fetchStats();
     } catch (e) {
-      print("sendAbsen error: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Gagal $type: ${e.toString()}")));
+    } finally {
+      setState(() => isSubmitting = false);
     }
-
-    setState(() => isSubmitting = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    bool hasCheckedIn =
+        stats != null &&
+        stats?['checkin_time'] != null &&
+        (stats?['checkin_time'] as String).isNotEmpty;
+    bool hasCheckedOut =
+        stats != null &&
+        stats?['checkout_time'] != null &&
+        (stats?['checkout_time'] as String).isNotEmpty;
+
     return Scaffold(
       backgroundColor: Color(0xFFE6E7EE),
       body: SafeArea(
@@ -321,7 +323,7 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   isLoading
                                       ? "Memuat data..."
-                                      : "Selamat ${_greeting()}, ${userName}!",
+                                      : "Selamat ${_greeting()}, $userName!",
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -354,8 +356,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-
-                // BODY
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.all(20),
@@ -383,9 +383,8 @@ class _HomePageState extends State<HomePage> {
                                             : kantorLocation,
                                         zoom: 16,
                                       ),
-                                      onMapCreated: (controller) {
-                                        mapController = controller;
-                                      },
+                                      onMapCreated: (controller) =>
+                                          mapController = controller,
                                       myLocationEnabled: true,
                                       markers: {
                                         if (currentPosition != null)
@@ -418,7 +417,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               SizedBox(height: 20),
-
                               // LOCATION CARD
                               Card(
                                 elevation: 3,
@@ -439,7 +437,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               SizedBox(height: 20),
-
                               // ABSENCE CARD
                               Card(
                                 elevation: 3,
@@ -496,9 +493,12 @@ class _HomePageState extends State<HomePage> {
                                           Expanded(
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.green,
+                                                backgroundColor: hasCheckedIn
+                                                    ? Colors.grey
+                                                    : Colors.green,
                                               ),
-                                              onPressed: isSubmitting
+                                              onPressed:
+                                                  isSubmitting || hasCheckedIn
                                                   ? null
                                                   : () => sendAbsen("checkin"),
                                               child: Text("Check-in"),
@@ -508,9 +508,16 @@ class _HomePageState extends State<HomePage> {
                                           Expanded(
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red,
+                                                backgroundColor:
+                                                    !hasCheckedIn ||
+                                                        hasCheckedOut
+                                                    ? Colors.grey
+                                                    : Colors.red,
                                               ),
-                                              onPressed: isSubmitting
+                                              onPressed:
+                                                  isSubmitting ||
+                                                      !hasCheckedIn ||
+                                                      hasCheckedOut
                                                   ? null
                                                   : () => sendAbsen("checkout"),
                                               child: Text("Check-out"),
@@ -523,7 +530,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               SizedBox(height: 20),
-
                               // WARNING CARD
                               if (distanceToOffice != null &&
                                   distanceToOffice! > 100)
@@ -550,7 +556,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-
             // SUCCESS CARD fade in – fade out
             if (_showSuccessCard)
               Center(

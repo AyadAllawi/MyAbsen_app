@@ -6,6 +6,7 @@ import 'package:myabsen_project/views/log/logreg.dart';
 import 'package:myabsen_project/views/log/register.dart';
 import 'package:myabsen_project/views/onboarding/onboarding.dart';
 import 'package:myabsen_project/views/splashscreen.dart';
+import 'package:myabsen_project/widgets/autochek.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         '/register_futsal': (context) => const RegisterPage(),
         '/home': (context) => HomePage(),
       },
-      home: SplashScreen(),
+      home: AuthCheckPage(),
     );
   }
 }

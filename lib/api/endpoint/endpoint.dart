@@ -12,8 +12,7 @@ class Endpoint {
   static const String absenStats = "$baseUrl/absen/stats";
 
   // history
-  static const String history = "$baseUrl/history-absen";
-
+  static const String history = "$baseUrl/absen/history";
   // profile
   static const String profile = "$baseUrl/profile";
   static const String profilePhoto = "$baseUrl/profile/photo";

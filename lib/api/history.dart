@@ -8,9 +8,7 @@ import 'package:myabsen_project/preference/shared_preference.dart';
 class HistoryService {
   static Future<GetHistoryModel> getHistory() async {
     final token = await PreferenceHandler.getToken();
-    print("Token yang digunakan saat ini: $token");
 
-    // Validasi token sebelum memanggil API
     if (token == null || token.isEmpty) {
       throw Exception("Token tidak valid. Silakan login ulang.");
     }
@@ -22,11 +20,13 @@ class HistoryService {
       headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
     );
 
+    print("URL History: ${url.toString()}");
     print("History Status: ${response.statusCode}");
     print("History Body: ${response.body}");
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
+
       // Periksa apakah 'data' ada dan merupakan list
       if (jsonResponse['data'] != null && jsonResponse['data'] is List) {
         return GetHistoryModel.fromJson(jsonResponse);
@@ -35,7 +35,7 @@ class HistoryService {
         return GetHistoryModel(message: "Tidak ada data riwayat", data: []);
       }
     } else {
-      // Lemparkan exception dengan status code yang lebih spesifik
+      // Lemparkan exception dengan status code
       throw Exception(
         "Gagal mengambil riwayat absensi. Status code: ${response.statusCode}",
       );
